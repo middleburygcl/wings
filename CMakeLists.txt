@@ -36,17 +36,18 @@ function(add_extern_repository name)
 	endif()
 endfunction()
 
+add_library(wings SHARED wings.cpp)
+set_property(TARGET wings PROPERTY CXX_STANDARD 14)
+target_link_libraries(wings ${LIBRARIES})
+
 option(BUILD_EXAMPLE "build example" TRUE)
 set(WINGS_STB_LOCATION "stb" CACHE STRING "location of stb installation")
 if (${WINGS_STB_LOCATION} MATCHES "stb")
 	add_extern_repository(stb GIT_REPOSITORY "https://github.com/nothings/stb")
 	set(WINGS_STB_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/stb)
 	set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_CURRENT_SOURCE_DIR}/stb)
+	add_definitions(-DWINGS_COMPILE_STB=1)
 endif()
-
-add_library(wings SHARED wings.cpp)
-set_property(TARGET wings PROPERTY CXX_STANDARD 14)
-target_link_libraries(wings ${LIBRARIES})
 
 include_directories(${WINGS_STB_LOCATION})
 if (${BUILD_EXAMPLE})

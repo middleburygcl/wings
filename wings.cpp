@@ -38,11 +38,13 @@ int stbi_write_jpg_to_func(stbi_write_func *func, void *context, int x, int y,
 }
 #endif
 
-// #define STB_IMAGE_IMPLEMENTATION
-// #include <stb_image.h>
+#if WINGS_COMPILE_STB
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 
-// #define STB_IMAGE_WRITE_IMPLEMENTATION
-// #include <stb_image_write.h>
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <stb_image_write.h>
+#endif
 
 #define GL_GLEXT_PROTOTYPES
 #ifdef __APPLE__
