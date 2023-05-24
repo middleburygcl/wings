@@ -25,11 +25,24 @@
 
 #define MAX_CLIENTS 10
 
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include <stb_image_write.h>
+typedef void stbi_write_func(void *context, void *data, int size);
+
+int stbi_write_jpg_to_func(stbi_write_func *func, void *context, int x, int y,
+                           int comp, const void *data, int quality);
+
+#ifdef __cplusplus
+}
+#endif
+
+// #define STB_IMAGE_IMPLEMENTATION
+// #include <stb_image.h>
+
+// #define STB_IMAGE_WRITE_IMPLEMENTATION
+// #include <stb_image_write.h>
 
 #define GL_GLEXT_PROTOTYPES
 #ifdef __APPLE__
