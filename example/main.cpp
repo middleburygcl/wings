@@ -481,7 +481,7 @@ bool glMeshScene::render(const ClientInput& input, int client_idx) {
   ClientView& view = view_[client_idx];
   bool updated = false;
   switch (input.type) {
-    case InputType::MouseMotion:
+    case InputType::MouseMotion: {
       if (input.dragging) {
         double dx = (view.x - input.x) / view.width;
         double dy = -(view.y - input.y) / view.height;
@@ -493,18 +493,23 @@ bool glMeshScene::render(const ClientInput& input, int client_idx) {
       view.x = input.x;
       view.y = input.y;
       break;
-    case InputType::KeyValue:
+    }
+    case InputType::KeyValue: {
       if (input.key == 'Q') {
         quality_ = input.value;
         updated = true;
       }
       break;
-    case InputType::Scroll:
+    }
+    case InputType::Scroll: {
       vec3f direction = view.eye - view.center;
       view.eye = view.center - direction / (-1.0 / input.value);
       vec3f up{0, 1, 0};
       view.view_matrix = glm::lookat(view.eye, view.center, up);
       updated = true;
+      break;
+    }
+    default:
       break;
   }
   if (!updated) return false;

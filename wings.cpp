@@ -813,10 +813,6 @@ class WebsocketClient {
             input.type = InputType::KeyValue;
             input.key = message[0];
             input.value = std::atoi(&message[1]);
-          } else if (message[0] == 'R') {
-            // sample rotation
-            input.type = InputType::KeyPressed;
-            input.key = message[0];
           }
 
           context_->enter_render_section();
@@ -1051,7 +1047,7 @@ StatusCode RenderingServer::start(const std::string &html_file, int port) {
 }
 
 StatusCode RenderingServer::stop() {
-  // renderer_.stop();
+  // renderer_->stop();
   listen_ = false;
   return server_.get();
 }

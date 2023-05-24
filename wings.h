@@ -47,7 +47,8 @@ struct ClientInput {
   float y{0.0f};
   char key{'\0'};
   float value{0.0f};
-  char symbol{'\0'};
+  int n_symbol{0};
+  char symbol[9];
 };
 
 enum RenderingContextType : uint8_t { kOpenGL };
