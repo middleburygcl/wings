@@ -824,11 +824,23 @@ class WebsocketClient {
           } else if (message[0] == 'W') {
             // mousewheel event
             input.type = InputType::Scroll;
-            input.value = (message[1] == '-') ? 0.95 : 1.05;
-          } else if (message[0] == 'Q') {
-            input.type = InputType::KeyValue;
-            input.key = message[0];
-            input.value = std::atoi(&message[1]);
+            input.fvalue = (message[1] == '-') ? 0.95 : 1.05;
+          } else if (message[0] == 'K') {
+            input.key = message[2];
+            if (message[1] == 'I') {
+              input.type = InputType::KeyValueInt;
+              input.ivalue = std::atoi(&message[3]);
+            } else if (message[1] == 'B') {
+              input.type = InputType::KeyValueBool;
+              input.bvalue = !(message[3] == 'f' || message[3] == 'F' ||
+                               message[3] == '0');
+            } else if (message[1] == 'F') {
+              input.type == InputType::KeyValueFloat;
+              input.fvalue = std::atof(&message[3]);
+            } else if (message[1] == 'S') {
+              input.type = InputType::KeyValueStr;
+              input.svalue = &message[3];
+            }
           }
 
           context_->enter_render_section();

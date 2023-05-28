@@ -32,10 +32,12 @@ enum class InputType : uint32_t {
   SingleClick,
   Scroll,
   DoubleClick,
-  KeyValue,
+  KeyValueBool,
+  KeyValueInt,
+  KeyValueFloat,
+  KeyValueStr,
   KeyPressed,
-  KeyReleased,
-  CustomSymbol
+  KeyReleased
 };
 
 enum class KeyModifier { Shift, Control, Alt, Option };
@@ -46,9 +48,10 @@ struct ClientInput {
   float x{0.0f};
   float y{0.0f};
   char key{'\0'};
-  float value{0.0f};
-  int n_symbol{0};
-  char symbol[9];
+  bool bvalue{false};
+  float fvalue{0.0f};
+  int ivalue{0};
+  const char* svalue{nullptr};
 };
 
 enum RenderingContextType : uint8_t { kOpenGL };
