@@ -45,6 +45,7 @@ enum class KeyModifier { Shift, Control, Alt, Option };
 struct ClientInput {
   InputType type;
   bool dragging{false};
+  bool modifier{false};
   float x{0.0f};
   float y{0.0f};
   char key{'\0'};

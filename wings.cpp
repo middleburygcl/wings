@@ -818,9 +818,10 @@ class WebsocketClient {
           ClientInput input;
           if (message[0] == 'M') {
             input.type = InputType::MouseMotion;
-            input.x = std::atoi(message.substr(2, 5).c_str());
-            input.y = std::atoi(message.substr(7, 5).c_str());
+            input.x = std::atoi(message.substr(3, 5).c_str());
+            input.y = std::atoi(message.substr(8, 5).c_str());
             if (message[1] == 'D') input.dragging = true;
+            if (message[2] == 'M') input.modifier = true;
           } else if (message[0] == 'W') {
             // mousewheel event
             input.type = InputType::Scroll;
