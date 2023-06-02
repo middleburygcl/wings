@@ -85,7 +85,8 @@ struct RenderingContext {
 
 class Scene {
  public:
-  virtual bool render(const ClientInput& input, int client_idx) = 0;
+  virtual bool render(const ClientInput& input, int client_idx,
+                      std::string* = nullptr) = 0;
   virtual void onconnect() = 0;
   virtual ~Scene() {}
 

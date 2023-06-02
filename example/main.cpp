@@ -368,7 +368,7 @@ class glMeshScene : public Scene {
     setup();
   }
   void setup();
-  bool render(const ClientInput& input, int client_idx);
+  bool render(const ClientInput& input, int client_idx, std::string*);
   void onconnect();
 
  private:
@@ -477,7 +477,7 @@ void glMeshScene::onconnect() {
   GL_CALL(glGenVertexArrays(1, &view.vertex_array));
 }
 
-bool glMeshScene::render(const ClientInput& input, int client_idx) {
+bool glMeshScene::render(const ClientInput& input, int client_idx, std::string*) {
   ClientView& view = view_[client_idx];
   bool updated = false;
   switch (input.type) {
@@ -494,16 +494,16 @@ bool glMeshScene::render(const ClientInput& input, int client_idx) {
       view.y = input.y;
       break;
     }
-    case InputType::KeyValue: {
+    case InputType::KeyValueInt: {
       if (input.key == 'Q') {
-        quality_ = input.value;
+        quality_ = input.ivalue;
         updated = true;
       }
       break;
     }
     case InputType::Scroll: {
       vec3f direction = view.eye - view.center;
-      view.eye = view.center - direction / (-1.0 / input.value);
+      view.eye = view.center - direction / (-1.0 / input.fvalue);
       vec3f up{0, 1, 0};
       view.view_matrix = glm::lookat(view.eye, view.center, up);
       updated = true;

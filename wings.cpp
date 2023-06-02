@@ -784,6 +784,7 @@ class WebsocketClient {
     // main thread) which can be used in this thread
     context_ = RenderingContext::create(scene_.context());
     scene_.onconnect();
+    sendmessage("*wings server initialized!", RFC6455_OP_TEXT);
 
     size_t max_length = 1e5;
     std::string frame(max_length, ' ');
@@ -841,7 +842,7 @@ class WebsocketClient {
               input.bvalue = !(message[3] == 'f' || message[3] == 'F' ||
                                message[3] == '0');
             } else if (message[1] == 'F') {
-              input.type == InputType::KeyValueFloat;
+              input.type = InputType::KeyValueFloat;
               input.fvalue = std::atof(&message[3]);
             } else if (message[1] == 'S') {
               input.type = InputType::KeyValueStr;
@@ -850,7 +851,8 @@ class WebsocketClient {
           }
 
           context_->enter_render_section();
-          bool updated = scene_.render(input, idx_);
+          std::string msg;
+          bool updated = scene_.render(input, idx_, &msg);
           if (updated) {
             // convert the scene pixels to a jpeg
             bytes_.resize(scene_.pixels().size());
@@ -860,6 +862,7 @@ class WebsocketClient {
 
             base64::encode(bytes_.c_str(), n_bytes_, img_);
             sendmessage(img_, RFC6455_OP_TEXT);
+            if (!msg.empty()) sendmessage(msg, RFC6455_OP_TEXT);
           }
           context_->leave_render_section();
         }
