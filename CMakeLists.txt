@@ -27,7 +27,7 @@ function(add_extern_repository name)
 			endif()
 			set(fetch_get git)
 			set(fetch_url ${ARG_GIT_REPOSITORY})
-			set(fetch_arg clone ${clone_opts} ${ARG_GIT_REPOSITORY} ${CMAKE_CURRENT_SOURCE_DIR}/${name})
+			set(fetch_arg clone ${clone_opts} ${ARG_GIT_REPOSITORY} ${CMAKE_CURRENT_SOURCE_DIR}/extern/${name})
 		else()
 			message(FATAL_ERROR "unknown repository type")
 		endif()
@@ -44,7 +44,7 @@ option(BUILD_EXAMPLE "build example" TRUE)
 set(WINGS_STB_LOCATION "stb" CACHE STRING "location of stb installation")
 if (${WINGS_STB_LOCATION} MATCHES "stb")
 	add_extern_repository(stb GIT_REPOSITORY "https://github.com/nothings/stb")
-	set(WINGS_STB_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/stb)
+	set(WINGS_STB_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/extern/stb)
 	set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_CURRENT_SOURCE_DIR}/stb)
 	add_definitions(-DWINGS_COMPILE_STB=1)
 endif()
@@ -52,7 +52,7 @@ endif()
 include_directories(${WINGS_STB_LOCATION})
 if (${BUILD_EXAMPLE})
 	add_extern_repository(tinyobjloader GIT_REPOSITORY "https://github.com/tinyobjloader/tinyobjloader")
-	add_executable(wings_example example/main.cpp tinyobjloader/tiny_obj_loader.cc)
+	add_executable(wings_example example/main.cpp extern/tinyobjloader/tiny_obj_loader.cc)
 	target_link_libraries(wings_example wings)
 	set_property(TARGET wings_example PROPERTY CXX_STANDARD 14)
 endif()
@@ -62,5 +62,15 @@ set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/tinyobjloader
 )
 
-
-
+option(BUILD_WINGS360 "build wings360" TRUE)
+if (${BUILD_WINGS360})
+	add_extern_repository(fmt GIT_REPOSITORY "https://github.com/fmtlib/fmt")
+	add_extern_repository(libmeshb GIT_REPOSITORY "https://github.com/LoicMarechal/libMeshb" SKIP_CONFIG TRUE)
+	# set all include directories
+	set(WINGS_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/extern
+		${CMAKE_CURRENT_SOURCE_DIR}/extern/libmeshb/sources
+		${CMAKE_CURRENT_SOURCE_DIR}/extern/fmt/include
+	)
+	include_directories(${WINGS_INCLUDE_DIRS})
+	add_subdirectory(wings360)
+endif()

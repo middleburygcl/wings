@@ -17,6 +17,11 @@
 #include <GL/gl.h>
 #endif
 
+enum TextureIndex {
+  POINT_TEXTURE = 0,
+  INDEX_TEXTURE = 1,
+};
+
 #define GL_CALL(X)                                                           \
   {                                                                          \
     (X);                                                                     \
@@ -379,6 +384,9 @@ class glMeshScene : public Scene {
   GLuint vertex_array;
   GLuint point_buffer;
   GLuint triangle_buffer;
+  GLuint index_buffer_;
+  GLuint index_texture_;
+  GLuint point_texture_;
   std::vector<ClientView> view_;
 };
 
@@ -399,6 +407,10 @@ void glMeshScene::setup() {
                        sizeof(unsigned int) * mesh_.triangles().size(),
                        mesh_.triangles().data(), GL_STATIC_DRAW));
   GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+  // create textures
+  GL_CALL(glGenTextures(1, &point_texture_));
+  GL_CALL(glGenTextures(1, &index_texture_));
 
   // create shader program
   program = glCreateProgram();
@@ -433,7 +445,7 @@ void glMeshScene::setup() {
   check_compile(fs_shader);
   GL_CALL(glAttachShader(program, fs_shader));
 
-#if WITH_GEOMETRY_SHADER
+#if WITH_GEOMETRY_SHADER || TEXTURE_INDICES
   GLuint gs_shader = glCreateShader(GL_GEOMETRY_SHADER);
   GL_CALL(glShaderSource(gs_shader, 1, &gs, NULL));
   GL_CALL(glCompileShader(gs_shader));
@@ -494,16 +506,16 @@ bool glMeshScene::render(const ClientInput& input, int client_idx) {
       view.y = input.y;
       break;
     }
-    case InputType::KeyValue: {
+    case InputType::KeyValueInt: {
       if (input.key == 'Q') {
-        quality_ = input.value;
+        quality_ = input.ivalue;
         updated = true;
       }
       break;
     }
     case InputType::Scroll: {
       vec3f direction = view.eye - view.center;
-      view.eye = view.center - direction / (-1.0 / input.value);
+      view.eye = view.center - direction / (-1.0 / input.fvalue);
       vec3f up{0, 1, 0};
       view.view_matrix = glm::lookat(view.eye, view.center, up);
       updated = true;
@@ -536,18 +548,34 @@ bool glMeshScene::render(const ClientInput& input, int client_idx) {
   GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
   // draw
-  // glBindFramebuffer(GL_FRAMEBUFFER, backend->framebuffer);
-  // glDrawBuffer(GL_COLOR_ATTACHMENT0);
   GL_CALL(glViewport(0, 0, view.width, view.height));
   GL_CALL(glClearColor(1.0f, 1.0f, 1.0f, 1.0f));
-  // GL_CALL(glClearColor(0.0f, 0.0f, 0.0f, 1.0f));
   GL_CALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-  // glEnable(GL_CULL_FACE);
   glEnable(GL_DEPTH_TEST);
+
+#if TEXTURE_INDICES
+  GL_CALL(glActiveTexture(GL_TEXTURE0 + POINT_TEXTURE));
+  GL_CALL(glBindTexture(GL_TEXTURE_BUFFER, point_texture_));
+  GL_CALL(glTexBuffer(GL_TEXTURE_BUFFER, GL_RGB32F, point_buffer));
+  location = glGetUniformLocation(program, "coordinates");
+  GL_CALL(glUniform1i(location, POINT_TEXTURE));
+
+  GL_CALL(glActiveTexture(GL_TEXTURE0 + INDEX_TEXTURE));
+  GL_CALL(glBindTexture(GL_TEXTURE_BUFFER, index_texture_));
+  GL_CALL(glTexBuffer(GL_TEXTURE_BUFFER, GL_R32UI, triangle_buffer));
+  location = glGetUniformLocation(program, "triangles");
+  GL_CALL(glUniform1i(location, INDEX_TEXTURE));
+
+  GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, point_buffer));
+  GL_CALL(glBindBuffer(GL_TEXTURE_BUFFER, index_buffer_));
+  GL_CALL(glDrawArrays(GL_POINTS, 0, mesh_.triangles().size() / 3));
+
+#else
 
   GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, triangle_buffer));
   GL_CALL(glDrawElements(GL_TRIANGLES, mesh_.triangles().size(),
                          GL_UNSIGNED_INT, 0));
+#endif
 
   GLsizei channels = 3;
   GLsizei stride = channels * view.width;
