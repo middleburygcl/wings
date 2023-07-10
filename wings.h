@@ -45,6 +45,7 @@ enum class KeyModifier { Shift, Control, Alt, Option };
 struct ClientInput {
   InputType type;
   bool dragging{false};
+  bool modifier{false};
   float x{0.0f};
   float y{0.0f};
   char key{'\0'};
@@ -84,7 +85,8 @@ struct RenderingContext {
 
 class Scene {
  public:
-  virtual bool render(const ClientInput& input, int client_idx) = 0;
+  virtual bool render(const ClientInput& input, int client_idx,
+                      std::string* = nullptr) = 0;
   virtual void onconnect() = 0;
   virtual ~Scene() {}
 

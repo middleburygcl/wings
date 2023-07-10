@@ -373,7 +373,7 @@ class glMeshScene : public Scene {
     setup();
   }
   void setup();
-  bool render(const ClientInput& input, int client_idx);
+  bool render(const ClientInput& input, int client_idx, std::string*);
   void onconnect();
 
  private:
@@ -489,7 +489,7 @@ void glMeshScene::onconnect() {
   GL_CALL(glGenVertexArrays(1, &view.vertex_array));
 }
 
-bool glMeshScene::render(const ClientInput& input, int client_idx) {
+bool glMeshScene::render(const ClientInput& input, int client_idx, std::string*) {
   ClientView& view = view_[client_idx];
   bool updated = false;
   switch (input.type) {
