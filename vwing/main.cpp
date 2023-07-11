@@ -623,7 +623,18 @@ class MeshScene : public wings::Scene {
           view.transparency = 0.01 * input.ivalue;
         else if (input.key == 'w')
           view.show_wireframe = input.ivalue > 0;
-        else {
+        else if (input.key == 'W') {
+          width_ = input.ivalue;
+          height_ = int(0.75 * width_);
+          view.width = width_;
+          view.height = height_;
+          context_->resize(view.width, view.height);
+          view.projection_matrix = glm::perspective(
+              view.fov, float(view.width) / float(view.height), 0.1f, 10000.0f);
+          // the wings rendering context is currently in the render section.
+          // there should be another image request after the size is updated
+          updated = false;
+        } else {
           updated = false;
         }
         break;
@@ -829,9 +840,9 @@ class MeshScene : public wings::Scene {
                       view.projection_matrix);
 
     // save the pixels in the wings::Scene
-    GLsizei channels = 3;
-    GLsizei stride = channels * view.width;
-    stride += (stride % 4) ? (4 - stride % 4) : 0;
+    channels_ = 3;
+    int stride = channels_ * view.width;
+    // stride += (stride % 4) ? (4 - stride % 4) : 0;
     pixels_.resize(stride * view.height);
     GL_CALL(glPixelStorei(GL_PACK_ALIGNMENT, 4));
     GL_CALL(glReadPixels(0, 0, view.width, view.height, GL_RGB,

@@ -75,9 +75,18 @@ struct RenderingContext {
     lock_.unlock();
   }
 
+  void resize(int width, int height) {
+    lock_.lock();
+    make_context_current();
+    resize_canvas(width, height);
+    release_context();
+    lock_.unlock();
+  }
+
   virtual void make_context_current() = 0;
   virtual void release_context() = 0;
   virtual void swap_buffers() = 0;
+  virtual void resize_canvas(int width, int height) = 0;
 
   std::mutex lock_;
   RenderingContextType type;
@@ -91,16 +100,21 @@ class Scene {
   virtual ~Scene() {}
 
   const RenderingContext& context() const { return *context_; }
+  RenderingContext& context() { return *context_; }
 
   int quality() const { return quality_; }
+  int width() const { return width_; }
+  int height() const { return height_; }
+  int channels() const { return channels_; }
   const std::vector<unsigned char>& pixels() const { return pixels_; }
-
-  RenderingContext& context() { return *context_; }
 
  protected:
   std::unique_ptr<RenderingContext> context_;
   std::vector<unsigned char> pixels_;
   int quality_{80};
+  int width_{800};
+  int height_{600};
+  int channels_{3};
 };
 
 class WebsocketRenderer;

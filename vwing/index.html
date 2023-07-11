@@ -66,8 +66,8 @@
         </div>
         &nbsp;&nbsp;
         <div style='display:inline-block'>
-          <input class='btn btn-light' onchange='setHeight();' style='width:100px; color:black'
-            id='input-height' type='number' step='100'></input>
+          <input class='btn btn-light' onchange='setWidth();' style='width:100px; color:black'
+            id='input-width' type='number' step='100' value='800'></input>
           &nbsp;&nbsp;
           <label class='form-check-label' for='height-input'>height</label>
           &nbsp;&nbsp;
@@ -211,6 +211,7 @@
           <div class="tab-content" id="views-tab-content">
             <div class="tab-pane fade show active" id="view0" role="tabpanel" aria-labelledby="view0-tab">
                 <img class='center' id='image' width=500 height=500 style="border: 4px solid black; border-radius: 8px;" /> <br>
+
             </div>
             <div class="tab-pane fade" id="view1" role="tabpanel" aria-labelledby="view1-tab">...</div>
             <div class="tab-pane fade" id="new-view" role="tabpanel" aria-labelledby="new-vew-tab">...</div>
@@ -282,6 +283,10 @@
     ws.onopen = function (e) {
       console.log('opened websocket connection');
       setQuality();
+      const w = 800;
+      const h = 600;
+      if (w != img.width) img.width = w;
+      if (h != img.height) img.height = h;
     }
     ws.onclose = function (evt) { console.log('connection closed'); }
     ws.onmessage = async (evt) => {
@@ -289,10 +294,7 @@
         document.getElementById('message-area').innerHTML = evt.data.substring(1);
         return;
       }
-      const w = 800;
-      const h = 600;
-      if (w != img.width) img.width = w;
-      if (h != img.height) img.height = h;
+
       const data = evt.data;
       img.src = 'data:image/jpg;base64,' + data;
       document.getElementById('size-label').innerHTML = parseInt(data.length / 1000) + ' kB';
@@ -401,6 +403,16 @@
 
   function toggleField() {
     ws.send('KSf');
+  }
+
+  function setWidth() {
+    const w = document.getElementById('input-width').value;
+    const h = parseInt(0.75 * w);
+    img.setAttribute('width', w);
+    img.setAttribute('height', h);
+    console.log(w, img.width, img.height);
+    ws.send('KIW' + img.width);
+    setQuality(); // request an image update
   }
 
 

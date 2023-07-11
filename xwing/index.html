@@ -54,85 +54,34 @@
       <div class='btn btn-primary'
         style='width:100%; height: 50px; background-color:black; color:white; border-color:black; border-radius: 0px;'
         onclick='connect();'>
-        wings360
+        wings
       </div>
 
       <hr>
 
       <div class="container-fluid">
-
         <div class="" style='display:inline-block'>
           <button class='float-right btn btn-primary' id='button-save-png' onclick='savePNG()'>export</button>
         </div>
         <div style='display:inline-block'>
-          <input class='btn btn-light' onchange='visualizer.setHeight();' style='width:100px; color:black'
-            id='input-height' type='number' step='100'></input>
-          <label class='form-check-label' for='height-input'>height</label>
+          <input class='btn btn-light' onchange='setWidth();' style='width:100px; color:black'
+            id='input-width' type='number' value='800' step='100'></input>
           &nbsp;&nbsp;
+          <div style='display:inline-block'>
+            <input id="quality" type="range" min="5" max="100" step="5" value="80" onchange="setQuality();">
+            <label for="quality">quality</label>
+          </div>
         </div>
-
-        <div style='display:inline-block'>
-          <select class='form-select' id='clip-dropdown' onchange='flux.draw();'>
-            <option>[clip off]</option>
-            <option>X+</option>
-            <option>X-</option>
-            <option>Y+</option>
-            <option>Y-</option>
-            <option>Z+</option>
-            <option>Z-</option>
-          </select>
-        </div>
-        &nbsp;&nbsp;
-        <input class='form-range' style='width:125px; display: inline-block' type='range' id='clip-distance'
-          onchange='flux.draw();' value='0'></input>
-        &nbsp;&nbsp;
-        <div style='display:inline-block'>
-          <select class='form-select' id='colormap-dropdown' onchange='flux.colormap(); flux.draw();'>
-            <option>[colormap]</option>
-            <option>blue-white-red</option>
-            <option>blue-green-red</option>
-            <option>parula</option>
-            <option>jet</option>
-            <option>hsv</option>
-            <option>hot</option>
-            <option>viridis</option>
-            <option>giraffe</option>
-          </select>
-        </div>
-        <hr>
-        <div style='display:inline-block'>
-          <button class='btn btn-primary' id='reset-view' onclick=''>center</button>
-        </div>
-        <select class='form-select' id='field-dropdown' onchange=''></select>
         &nbsp;&nbsp;
         <div class='form-check' style='display:inline-block'>
           <input class='form-check-input' id='checkbox-edges' type='checkbox' checked
-            onchange='flux.toggleEdges(); flux.draw();'></input>
+            onchange='togglePrimitive("checkbox-edges", "e");'></input>
           <label class='form-check-label' for='checkbox-edges'>edges</label>
         </div>
         <div class='form-check' style='display:inline-block'>
           <input class='form-check-input' id='checkbox-triangles' type='checkbox' checked
-            onchange='flux.toggleTriangles(); flux.draw();'></input>
+            onchange='togglePrimitive("checkbox-triangles", "t");'></input>
           <label class='form-check-label' for='checkbox-triangles'>triangles</label>
-        </div>
-        <div class='form-check' style='display:inline-block'>
-          <input class='form-check-input' id='checkbox-points' type='checkbox'
-            onchange='flux.togglePoints(); flux.draw();'></input>
-          <label class='form-check-label' for='checkbox-points'>points</label>
-        </div>
-        <div class='form-check' style='display:inline-block'>
-          <input class='form-check-input' id='checkbox-lighting' type='checkbox' checked
-            onchange='flux.lighting = !flux.lighting; flux.draw();'></input>
-          <label class='form-check-label' for='checkbox-lighting'>lighting</label>
-        </div>
-        <div class='form-check' style='display:inline-block'>
-          <input class='form-check-input' id='checkbox-lighting' type='checkbox'
-            onchange='flux.toggleNumbers(); flux.draw();'></input>
-          <label class='form-check-label' for='checkbox-numbers'>numbers</label>
-        </div>
-        <div class='form-check' style='display:inline-block'>
-          <button class='btn btn-primary' id='fps-button' onclick='estimateFps();'>FPS</button>
-          <label class='form-check-label' for='fps-button' id='fps-label'></label>
         </div>
         <div class='form-check' style='display:inline-block'>
           <label class='form-check-label' id='size-label'></label>
@@ -159,12 +108,6 @@
             <div class="tab-pane fade" id="view1" role="tabpanel" aria-labelledby="view1-tab">...</div>
             <div class="tab-pane fade" id="new-view" role="tabpanel" aria-labelledby="new-vew-tab">...</div>
           </div>
-          <center>
-            <div>
-              <input id="quality" type="range" min="5" max="100" step="5" value="80" onchange="setQuality();">
-              <label for="quality">quality</label>
-            </div>
-          </center>
         </div>
         <hr>
       </div> <!-- container-fluid -->
@@ -240,6 +183,7 @@
       if (w != img.width) img.width = w;
       if (h != img.height) img.height = h;
       const data = evt.data;
+      if (data[0] == '*') return;
       img.src = 'data:image/jpg;base64,' + data;
       document.getElementById('size-label').innerHTML = parseInt(data.length / 1000) + ' kB';
     }
@@ -248,6 +192,8 @@
   let dragging = false;
   let scrolling = undefined, scrolling_timeout;
   let quality0 = document.getElementById('quality').value;
+  let ctrlKey = false;
+  let shiftKey = false;
   img.addEventListener('mousedown', function (e) {
     e.preventDefault();
     quality0 = document.getElementById('quality').value;
@@ -264,9 +210,10 @@
   });
 
   img.addEventListener('mousemove', function (e) {
+    const mod = e.ctrlKey || e.shiftKey;
     const x = ("0000" + e.clientX).slice(-5);
     const y = ("0000" + e.clientY).slice(-5);
-    const msg = 'M' + (dragging ? 'D' : 'd') + x + y;
+    const msg = 'M' + (dragging ? 'D' : 'd') + (mod ? 'M' : 'm') + x + y;
     ws.send(msg);
   });
 
@@ -291,32 +238,25 @@
   }, false);
 
   setQuality = function () {
-    ws.send('Q' + document.getElementById('quality').value);
+    ws.send('KIQ' + document.getElementById('quality').value);
   };
 
-  window.onresize = function () {
+  function checkboxResult(id) {
+    if (document.getElementById(id).checked) return 1;
+    return 0;
   }
 
-  function estimateFps() {
-    let old_cb = ws.onmessage;
-    let angle;
-    let frame = 0;
-    const start = Date.now();
-    ws.onmessage = function (evt) {
-      if (frame++ > 1000) {
-        ws.onmessage = old_cb;
-        return;
-      }
-      img.src = 'data:image/jpg;base64,' + evt.data;
-      const angle = ("000" + frame).slice(-3);
-      ws.send('R' + angle);
-      const end = Date.now();
-      const t = (end - start) / 1000;
-      document.getElementById('fps-label').innerHTML = (frame / t).toFixed(1);
-    }
-    setQuality();
-    document.getElementById('fps-label').innerHTML = '';
+  function togglePrimitive(id, c) {
+    ws.send('KI' + c + checkboxResult(id));
   }
+
+  function setWidth() {
+    const w = document.getElementById('input-width').value;
+    img.width = w;
+    img.height = parseInt(0.75 * w);
+    ws.send('KIW' + img.width);
+  }
+
 
 </script>
 

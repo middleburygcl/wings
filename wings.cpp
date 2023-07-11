@@ -613,6 +613,7 @@ struct glRenderingContext : public RenderingContext {
   void make_context_current();
   void release_context();
   void swap_buffers();
+  void resize_canvas(int width, int height);
 
 #if HAVE_EGL
   EGLDisplay display;
@@ -757,6 +758,25 @@ void glRenderingContext::swap_buffers() {
 #endif
 }
 
+void glRenderingContext::resize_canvas(int width, int height) {
+  // make_context_current();
+#if HAVE_EGL
+  EGLint surface_attribs[] = {EGL_WIDTH, static_cast<int>(width), EGL_HEIGHT,
+                              static_cast<int>(height), EGL_NONE};
+  surface = eglCreatePbufferSurface(display, config, surface_attribs);
+  EGL_CHECK();
+
+#elif HAVE_CGL
+
+#endif
+  std::cout << "width = " << width << " height = " << height << std::endl;
+  GL_CALL(glDeleteFramebuffers(1, &framebuffer));
+  GL_CALL(glDeleteRenderbuffers(1, &renderbuffer));
+  GL_CALL(glDeleteRenderbuffers(1, &depthbuffer));
+  create_renderbuffers(width, height);
+  // release_context();
+}
+
 std::unique_ptr<RenderingContext> RenderingContext::create(
     const RenderingContext &ctx) {
   if (ctx.type == RenderingContextType::kOpenGL)
@@ -857,7 +877,11 @@ class WebsocketClient {
             // convert the scene pixels to a jpeg
             bytes_.resize(scene_.pixels().size());
             n_bytes_ = 0;
-            stbi_write_jpg_to_func(custom_stbi_write_mem, this, 800, 600, 3,
+            // std::cout << "w = " << scene_.width() << " h = " <<
+            // scene_.height()
+            //           << std::endl;
+            stbi_write_jpg_to_func(custom_stbi_write_mem, this, scene_.width(),
+                                   scene_.height(), scene_.channels(),
                                    scene_.pixels().data(), scene_.quality());
 
             base64::encode(bytes_.c_str(), n_bytes_, img_);

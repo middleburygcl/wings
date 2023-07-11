@@ -1,10 +1,10 @@
 #include <array>
 #include <cmath>
 #include <iostream>
+#include <set>
 
 #include "../tinyobjloader/tiny_obj_loader.h"
 #include "../wings.h"
-#include "shaders.h"
 
 #define GL_GLEXT_PROTOTYPES
 #ifdef __APPLE__
@@ -95,8 +95,17 @@ inline vec3f cross(const vec3f& u, const vec3f& v) {
 inline vec3f operator-(const vec3f& u, const vec3f& v) {
   return {u[0] - v[0], u[1] - v[1], u[2] - v[2]};
 }
+inline vec3f operator+(const vec3f& u, const vec3f& v) {
+  return {u[0] + v[0], u[1] + v[1], u[2] + v[2]};
+}
 inline vec3f operator/(const vec3f& u, const float a) {
   return {u[0] / a, u[1] / a, u[2] / a};
+}
+inline vec3f operator*(const vec3f& u, const float a) {
+  return {u[0] * a, u[1] * a, u[2] * a};
+}
+inline vec3f operator*(const float a, const vec3f& u) {
+  return {u[0] * a, u[1] * a, u[2] * a};
 }
 
 inline mat4f operator*(const mat4f& A, const mat4f& B) {
@@ -280,29 +289,18 @@ void read_obj(const std::string& filename, std::vector<float>& points,
   std::vector<tinyobj::material_t> materials;
 
   std::string base_dir = get_base_dir(filename.c_str());
-  if (base_dir.empty()) {
-    base_dir = ".";
-  }
+  if (base_dir.empty()) base_dir = ".";
   base_dir += "/";
 
   std::string warn;
   std::string err;
   bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err,
                               filename.c_str(), base_dir.c_str(), false);
-  if (!warn.empty()) {
-    std::cout << "WARN: " << warn << std::endl;
-  }
-  if (!err.empty()) {
-    std::cerr << err << std::endl;
-  }
+  if (!warn.empty()) std::cout << "WARNING: " << warn << std::endl;
+  assert(err.empty());
   assert(ret);
 
-  printf("# of vertices  = %d\n", (int)(attrib.vertices.size()) / 3);
-  printf("# of normals   = %d\n", (int)(attrib.normals.size()) / 3);
-  printf("# of texcoords = %d\n", (int)(attrib.texcoords.size()) / 2);
-  printf("# of materials = %d\n", (int)materials.size());
-  printf("# of shapes    = %d\n", (int)shapes.size());
-
+  points.reserve(attrib.vertices.size());
   for (size_t v = 0; v < attrib.vertices.size(); v++)
     points.push_back(attrib.vertices[v]);
 
@@ -311,11 +309,6 @@ void read_obj(const std::string& filename, std::vector<float>& points,
   for (size_t i = 0; i < shapes.size(); i++) {
     size_t index_offset = 0;
 
-    assert(shapes[i].mesh.num_face_vertices.size() ==
-           shapes[i].mesh.material_ids.size());
-    assert(shapes[i].mesh.num_face_vertices.size() ==
-           shapes[i].mesh.smoothing_group_ids.size());
-
     // for each face
     for (size_t f = 0; f < shapes[i].mesh.num_face_vertices.size(); f++) {
       size_t fnum = shapes[i].mesh.num_face_vertices[f];
@@ -323,25 +316,55 @@ void read_obj(const std::string& filename, std::vector<float>& points,
       for (size_t j = 0; j < fnum; j++)
         indices[j] = shapes[i].mesh.indices[index_offset + j].vertex_index;
 
-      if (fnum == 3) {
-        for (int j = 0; j < 3; j++) triangles.push_back(indices[j]);
-      } else if (fnum == 4) {
-        assert(false);
-      } else {
-        assert(false);
-      }
-
+      assert(fnum == 3);
+      for (int j = 0; j < 3; j++) triangles.push_back(indices[j]);
       index_offset += fnum;
     }
   }  // loop over shape
 }
 
+static const char* vs = R"(
+#version 330 core
+uniform mat4 u_ModelMatrix;
+uniform mat4 u_ViewMatrix;
+uniform mat4 u_ProjectionMatrix;
+layout(location = 0) in vec3 a_Position;
+void main() {
+    gl_Position = u_ProjectionMatrix * u_ViewMatrix * u_ModelMatrix * vec4(a_Position, 1.0);
+})";
+
+const char* fs = R"(
+#version 330 core
+out vec4 fragColor;
+uniform int u_edges;
+void main() {
+    fragColor = (1 - u_edges) * vec4(.8, .8, .8, 0.0) + u_edges *  vec4(0, 0, 0, 0);
+})";
+
 class Mesh {
  public:
-  Mesh(const std::string& filename) { read_obj(filename, points_, triangles_); }
+  Mesh(const std::string& filename) {
+    read_obj(filename, points_, triangles_);
+    std::set<std::pair<unsigned int, unsigned int>> e;
+    edges_.reserve(triangles_.size() * 2);
+    for (size_t k = 0; k < triangles_.size() / 3; k++) {
+      for (int i = 0; i < 3; i++) {
+        auto p = triangles_[3 * k + i];
+        auto q = triangles_[3 * k + ((i == 2) ? 0 : i + 1)];
+        if (q < p) std::swap(p, q);
+        auto it = e.find({p, q});
+        if (it == e.end()) {
+          e.insert({p, q});
+          edges_.push_back(p);
+          edges_.push_back(q);
+        }
+      }
+    }
+  }
 
   const auto& points() const { return points_; }
   const auto& triangles() const { return triangles_; }
+  const auto& edges() const { return edges_; }
 
   const auto& coordinate(int64_t k, int d) const { return points_[3 * k + d]; }
 
@@ -350,6 +373,7 @@ class Mesh {
  private:
   std::vector<float> points_;
   std::vector<unsigned int> triangles_;
+  std::vector<unsigned int> edges_;
 };
 
 namespace wings {
@@ -364,6 +388,8 @@ class glMeshScene : public Scene {
     int height{600};
     double x{0}, y{0};
     GLuint vertex_array;
+    bool draw_edges{true};
+    bool draw_triangles{true};
   };
 
  public:
@@ -384,9 +410,7 @@ class glMeshScene : public Scene {
   GLuint vertex_array;
   GLuint point_buffer;
   GLuint triangle_buffer;
-  GLuint index_buffer_;
-  GLuint index_texture_;
-  GLuint point_texture_;
+  GLuint edge_buffer;
   std::vector<ClientView> view_;
 };
 
@@ -408,9 +432,12 @@ void glMeshScene::setup() {
                        mesh_.triangles().data(), GL_STATIC_DRAW));
   GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
-  // create textures
-  GL_CALL(glGenTextures(1, &point_texture_));
-  GL_CALL(glGenTextures(1, &index_texture_));
+  GL_CALL(glGenBuffers(1, &edge_buffer));
+  GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, edge_buffer));
+  GL_CALL(glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                       sizeof(unsigned int) * mesh_.edges().size(),
+                       mesh_.edges().data(), GL_STATIC_DRAW));
+  GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
   // create shader program
   program = glCreateProgram();
@@ -445,13 +472,6 @@ void glMeshScene::setup() {
   check_compile(fs_shader);
   GL_CALL(glAttachShader(program, fs_shader));
 
-#if WITH_GEOMETRY_SHADER || TEXTURE_INDICES
-  GLuint gs_shader = glCreateShader(GL_GEOMETRY_SHADER);
-  GL_CALL(glShaderSource(gs_shader, 1, &gs, NULL));
-  GL_CALL(glCompileShader(gs_shader));
-  check_compile(gs_shader);
-  GL_CALL(glAttachShader(program, gs_shader));
-#endif
   GL_CALL(glLinkProgram(program));
 }
 
@@ -477,26 +497,31 @@ void glMeshScene::onconnect() {
     view.center_translation(d, 3) = view.center[d];
     view.inverse_center_translation(d, 3) = -view.center[d];
   }
-  vec3f dir = xmin - view.center;
-  view.eye = view.center - dir / (-.5);
+
+  float d = std::fabs(xmin[1] - xmax[1]);
+  vec3f dir{0, 0, 1};
+  view.eye = view.center + 1.05f * d * dir;
+  view.center = view.eye - 2.1f * d * dir;
 
   view.model_matrix.eye();
   vec3f up{0, 1, 0};
   view.view_matrix = glm::lookat(view.eye, view.center, up);
   view.projection_matrix = glm::perspective(
-      45.0f, float(view.width) / float(view.height), 0.001f, 1000.0f);
+      45.0f, float(view.width) / float(view.height), 0.1f, 1000.0f);
 
   GL_CALL(glGenVertexArrays(1, &view.vertex_array));
 }
 
-bool glMeshScene::render(const ClientInput& input, int client_idx, std::string*) {
+bool glMeshScene::render(const ClientInput& input, int client_idx,
+                         std::string* msg) {
   ClientView& view = view_[client_idx];
+  msg = nullptr;
   bool updated = false;
   switch (input.type) {
     case InputType::MouseMotion: {
       if (input.dragging) {
         double dx = (view.x - input.x) / view.width;
-        double dy = -(view.y - input.y) / view.height;
+        double dy = (view.y - input.y) / view.height;
         mat4f R = view.center_translation * glm::rotation(dx, dy) *
                   view.inverse_center_translation;
         view.model_matrix = R * view.model_matrix;
@@ -510,12 +535,18 @@ bool glMeshScene::render(const ClientInput& input, int client_idx, std::string*)
       if (input.key == 'Q') {
         quality_ = input.ivalue;
         updated = true;
+      } else if (input.key == 'e') {
+        view.draw_edges = !view.draw_edges;
+        updated = true;
+      } else if (input.key == 't') {
+        view.draw_triangles = !view.draw_triangles;
+        updated = true;
       }
       break;
     }
     case InputType::Scroll: {
       vec3f direction = view.eye - view.center;
-      view.eye = view.center - direction / (-1.0 / input.fvalue);
+      view.eye = view.center + direction * 1.0f * input.fvalue;
       vec3f up{0, 1, 0};
       view.view_matrix = glm::lookat(view.eye, view.center, up);
       updated = true;
@@ -553,32 +584,31 @@ bool glMeshScene::render(const ClientInput& input, int client_idx, std::string*)
   GL_CALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
   glEnable(GL_DEPTH_TEST);
 
-#if TEXTURE_INDICES
-  GL_CALL(glActiveTexture(GL_TEXTURE0 + POINT_TEXTURE));
-  GL_CALL(glBindTexture(GL_TEXTURE_BUFFER, point_texture_));
-  GL_CALL(glTexBuffer(GL_TEXTURE_BUFFER, GL_RGB32F, point_buffer));
-  location = glGetUniformLocation(program, "coordinates");
-  GL_CALL(glUniform1i(location, POINT_TEXTURE));
+  // glEnable(GL_BLEND);
+  // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  GL_CALL(glActiveTexture(GL_TEXTURE0 + INDEX_TEXTURE));
-  GL_CALL(glBindTexture(GL_TEXTURE_BUFFER, index_texture_));
-  GL_CALL(glTexBuffer(GL_TEXTURE_BUFFER, GL_R32UI, triangle_buffer));
-  location = glGetUniformLocation(program, "triangles");
-  GL_CALL(glUniform1i(location, INDEX_TEXTURE));
+  glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+  glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
 
-  GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, point_buffer));
-  GL_CALL(glBindBuffer(GL_TEXTURE_BUFFER, index_buffer_));
-  GL_CALL(glDrawArrays(GL_POINTS, 0, mesh_.triangles().size() / 3));
+  glEnable(GL_POLYGON_OFFSET_FILL);
+  glPolygonOffset(1.0, 1.5);
 
-#else
+  location = glGetUniformLocation(program, "u_edges");
+  if (view.draw_triangles) {
+    glUniform1i(location, 0);
+    GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, triangle_buffer));
+    GL_CALL(glDrawElements(GL_TRIANGLES, mesh_.triangles().size(),
+                           GL_UNSIGNED_INT, 0));
+  }
 
-  GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, triangle_buffer));
-  GL_CALL(glDrawElements(GL_TRIANGLES, mesh_.triangles().size(),
-                         GL_UNSIGNED_INT, 0));
-#endif
+  if (view.draw_edges) {
+    glUniform1i(location, 1);
+    GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, edge_buffer));
+    GL_CALL(glDrawElements(GL_LINES, mesh_.edges().size(), GL_UNSIGNED_INT, 0));
+  }
 
-  GLsizei channels = 3;
-  GLsizei stride = channels * view.width;
+  channels_ = 3;
+  GLsizei stride = channels_ * view.width;
   stride += (stride % 4) ? (4 - stride % 4) : 0;
   // pixels_.resize(view.width * view.height * 3 * 2);
   pixels_.resize(stride * view.height);
@@ -603,7 +633,7 @@ int main(int argc, const char** argv) {
 
   wings::glMeshScene scene(mesh);
   wings::RenderingServer renderer(scene, ws_port);
-  if (tcp_port > 0) renderer.start("../example/index.html", tcp_port);
+  if (tcp_port > 0) renderer.start("../xwing/index.html", tcp_port);
 
   return 0;
 }
