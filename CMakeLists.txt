@@ -92,15 +92,15 @@ if (${BUILD_EXAMPLES})
 	add_extern_repository(libmeshb GIT_REPOSITORY "https://github.com/LoicMarechal/libMeshb")
 
 	# alpha
-	add_executable(awings apps/alpha/main.cpp)
-	target_link_libraries(awings wings tinyobjloader)
-	set_property(TARGET awings PROPERTY CXX_STANDARD 14)
+	add_executable(awing apps/awing/main.cpp)
+	target_link_libraries(awing wings tinyobjloader)
+	set_property(TARGET awing PROPERTY CXX_STANDARD 14)
 
 	# beta
-	add_executable(bwings apps/beta/main.cpp)
+	add_executable(bwing apps/bwing/main.cpp)
 	#add_dependencies(bwings wings wings_util_static)
-	target_link_libraries(bwings wings_util_static wings dl)
-	target_compile_definitions(bwings PUBLIC -DWINGS_SOURCE_DIR="${PROJECT_SOURCE_DIR}")
+	target_link_libraries(bwing wings_util_static wings dl)
+	target_compile_definitions(bwing PUBLIC -DWINGS_SOURCE_DIR="${PROJECT_SOURCE_DIR}")
 endif()
 
 set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES 
