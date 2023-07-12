@@ -2,6 +2,7 @@
 #include <cmath>
 #include <iostream>
 #include <set>
+#include <cassert>
 
 #include "../tinyobjloader/tiny_obj_loader.h"
 #include "../wings.h"

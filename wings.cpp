@@ -764,6 +764,27 @@ void glRenderingContext::swap_buffers() {
 
 void glRenderingContext::resize_canvas(int width, int height) {
 #if HAVE_EGL
+  // select an appropriate configuration
+  EGLint config_attribs[] = {EGL_SURFACE_TYPE,
+                             EGL_PBUFFER_BIT,
+                             EGL_RED_SIZE,
+                             8,
+                             EGL_GREEN_SIZE,
+                             8,
+                             EGL_BLUE_SIZE,
+                             8,
+                             EGL_ALPHA_SIZE,
+                             8,
+                             EGL_DEPTH_SIZE,
+                             24,
+                             EGL_STENCIL_SIZE,
+                             8,
+                             EGL_RENDERABLE_TYPE,
+                             EGL_OPENGL_BIT,
+                             EGL_NONE};
+  EGLint n_config;
+  EGLConfig config;
+  EGL_CALL(eglChooseConfig(display, config_attribs, &config, 1, &n_config));
   EGLint surface_attribs[] = {EGL_WIDTH, static_cast<int>(width), EGL_HEIGHT,
                               static_cast<int>(height), EGL_NONE};
   surface = eglCreatePbufferSurface(display, config, surface_attribs);

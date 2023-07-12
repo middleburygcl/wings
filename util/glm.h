@@ -3,6 +3,7 @@
 #include <array>
 #include <cmath>
 #include <iostream>
+#include <cassert>
 
 template <size_t N, typename T>
 struct vec : public std::array<T, N> {
