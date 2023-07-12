@@ -609,7 +609,7 @@ void RenderingContext::print(bool with_extensions) {
 struct glRenderingContext : public RenderingContext {
   glRenderingContext(const RenderingContext *ctx);
 
-  void create_renderbuffers(int width, int height);
+  // void create_renderbuffers(int width, int height);
   void make_context_current();
   void release_context();
   void swap_buffers();
@@ -622,7 +622,7 @@ struct glRenderingContext : public RenderingContext {
 #elif HAVE_CGL
   CGLContextObj context;
 #endif
-  GLuint framebuffer, depthbuffer, renderbuffer;
+  // GLuint framebuffer, depthbuffer, renderbuffer;
 };
 
 glRenderingContext::glRenderingContext(const RenderingContext *ctx)
@@ -708,9 +708,11 @@ glRenderingContext::glRenderingContext(const RenderingContext *ctx)
 #error "no OpenGL backend was found"
 #endif
   make_context_current();
-  create_renderbuffers(800, 600);
+  // create_renderbuffers(800, 600);
+  //  resize_canvas(800, 600);
 }
 
+#if 0
 void glRenderingContext::create_renderbuffers(int width, int height) {
   GL_CALL(glGenFramebuffers(1, &framebuffer));
   GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, framebuffer));
@@ -719,9 +721,10 @@ void glRenderingContext::create_renderbuffers(int width, int height) {
   GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer));
   GL_CALL(glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8, width, height));
 
-  glGenRenderbuffers(1, &depthbuffer);
-  glBindRenderbuffer(GL_RENDERBUFFER, depthbuffer);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
+  GL_CALL(glGenRenderbuffers(1, &depthbuffer));
+  GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, depthbuffer));
+  GL_CALL(glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width,
+                                height));
 
   GL_CALL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                                     GL_RENDERBUFFER, renderbuffer));
@@ -729,6 +732,7 @@ void glRenderingContext::create_renderbuffers(int width, int height) {
                             GL_RENDERBUFFER, depthbuffer);
   assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
 }
+#endif
 
 void glRenderingContext::make_context_current() {
 #if HAVE_EGL
@@ -759,22 +763,12 @@ void glRenderingContext::swap_buffers() {
 }
 
 void glRenderingContext::resize_canvas(int width, int height) {
-  // make_context_current();
 #if HAVE_EGL
   EGLint surface_attribs[] = {EGL_WIDTH, static_cast<int>(width), EGL_HEIGHT,
                               static_cast<int>(height), EGL_NONE};
   surface = eglCreatePbufferSurface(display, config, surface_attribs);
   EGL_CHECK();
-
-#elif HAVE_CGL
-
 #endif
-  std::cout << "width = " << width << " height = " << height << std::endl;
-  GL_CALL(glDeleteFramebuffers(1, &framebuffer));
-  GL_CALL(glDeleteRenderbuffers(1, &renderbuffer));
-  GL_CALL(glDeleteRenderbuffers(1, &depthbuffer));
-  create_renderbuffers(width, height);
-  // release_context();
 }
 
 std::unique_ptr<RenderingContext> RenderingContext::create(

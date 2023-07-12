@@ -174,14 +174,15 @@
     ws = new websocket(url);
     ws.onopen = function (e) {
       console.log('opened websocket connection');
-      setQuality();
-    }
-    ws.onclose = function (evt) { console.log('connection closed'); }
-    ws.onmessage = async (evt) => {
       const w = 800;
       const h = 600;
       if (w != img.width) img.width = w;
       if (h != img.height) img.height = h;
+      setQuality();
+    }
+    ws.onclose = function (evt) { console.log('connection closed'); }
+    ws.onmessage = async (evt) => {
+
       const data = evt.data;
       if (data[0] == '*') return;
       img.src = 'data:image/jpg;base64,' + data;
@@ -255,6 +256,8 @@
     img.width = w;
     img.height = parseInt(0.75 * w);
     ws.send('KIW' + img.width);
+   //ws.send('KW' + img.width);
+    setQuality();
   }
 
 
