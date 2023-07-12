@@ -708,31 +708,7 @@ glRenderingContext::glRenderingContext(const RenderingContext *ctx)
 #error "no OpenGL backend was found"
 #endif
   make_context_current();
-  // create_renderbuffers(800, 600);
-  //  resize_canvas(800, 600);
 }
-
-#if 0
-void glRenderingContext::create_renderbuffers(int width, int height) {
-  GL_CALL(glGenFramebuffers(1, &framebuffer));
-  GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, framebuffer));
-
-  GL_CALL(glGenRenderbuffers(1, &renderbuffer));
-  GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer));
-  GL_CALL(glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8, width, height));
-
-  GL_CALL(glGenRenderbuffers(1, &depthbuffer));
-  GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, depthbuffer));
-  GL_CALL(glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width,
-                                height));
-
-  GL_CALL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                                    GL_RENDERBUFFER, renderbuffer));
-  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-                            GL_RENDERBUFFER, depthbuffer);
-  assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
-}
-#endif
 
 void glRenderingContext::make_context_current() {
 #if HAVE_EGL
@@ -764,7 +740,6 @@ void glRenderingContext::swap_buffers() {
 
 void glRenderingContext::resize_canvas(int width, int height) {
 #if HAVE_EGL
-  // select an appropriate configuration
   EGLint config_attribs[] = {EGL_SURFACE_TYPE,
                              EGL_PBUFFER_BIT,
                              EGL_RED_SIZE,
@@ -1126,6 +1101,54 @@ StatusCode RenderingServer::stop() {
   // renderer_->stop();
   listen_ = false;
   return server_.get();
+}
+
+void glCanvas::bind() {
+  GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, framebuffer));
+}
+
+void glCanvas::create() {
+  GLuint gl_framebuffer;
+  GL_CALL(glGenFramebuffers(1, &gl_framebuffer));
+  GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, gl_framebuffer));
+
+  GLuint gl_renderbuffer;
+  GL_CALL(glGenRenderbuffers(1, &gl_renderbuffer));
+  GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, gl_renderbuffer));
+  GL_CALL(glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8, width, height));
+
+  GLuint gl_depthbuffer;
+  GL_CALL(glGenRenderbuffers(1, &gl_depthbuffer));
+  GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, gl_depthbuffer));
+  GL_CALL(glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width,
+                                height));
+
+  GL_CALL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                    GL_RENDERBUFFER, gl_renderbuffer));
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                            GL_RENDERBUFFER, gl_depthbuffer);
+  assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+
+  framebuffer = gl_framebuffer;
+  renderbuffer = gl_renderbuffer;
+  depthbuffer = gl_depthbuffer;
+}
+
+void glCanvas::resize(int w, int h) {
+  bind();
+  release();
+  width = w;
+  height = h;
+  create();
+}
+
+void glCanvas::release() {
+  GLuint gl_renderbuffer = renderbuffer;
+  GLuint gl_depthbuffer = depthbuffer;
+  GLuint gl_framebuffer = framebuffer;
+  if (renderbuffer >= 0) GL_CALL(glDeleteRenderbuffers(1, &gl_renderbuffer));
+  if (depthbuffer >= 0) GL_CALL(glDeleteRenderbuffers(1, &gl_depthbuffer));
+  if (framebuffer >= 0) GL_CALL(glDeleteFramebuffers(1, &gl_framebuffer));
 }
 
 }  // namespace wings

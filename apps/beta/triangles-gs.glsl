@@ -10,7 +10,7 @@ uniform int u_clip;
 uniform vec3 u_clip_point;
 uniform vec3 u_clip_normal;
 
-uniform vec2 u_ViewportSize = vec2(800,600);
+uniform vec2 u_ViewportSize;// = vec2(800,600);
 
 noperspective out vec3 v_Position;
 noperspective out vec3 altitude;

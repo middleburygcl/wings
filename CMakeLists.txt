@@ -56,7 +56,13 @@ add_library(wings SHARED wings.cpp)
 set_property(TARGET wings PROPERTY CXX_STANDARD 14)
 target_link_libraries(wings ${LIBRARIES})
 
-option(BUILD_EXAMPLE "build example" TRUE)
+option(BUILD_EXAMPLES "build examples" TRUE)
+option(BUILD_UTILITIES "build utilities" FALSE)
+
+if (${BUILD_EXAMPLES})
+	set(${BUILD_UTILITIES} TRUE)
+endif()
+
 set(WINGS_STB_LOCATION "stb" CACHE STRING "location of stb installation")
 if (${WINGS_STB_LOCATION} MATCHES "stb")
 	add_extern_repository(stb GIT_REPOSITORY "https://github.com/nothings/stb" SKIP_CONFIG TRUE)
@@ -65,41 +71,42 @@ if (${WINGS_STB_LOCATION} MATCHES "stb")
 	add_definitions(-DWINGS_COMPILE_STB=1)
 endif()
 
+# set include directories
+set(WINGS_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/util ${CMAKE_CURRENT_SOURCE_DIR}/third_party
+	${CMAKE_CURRENT_SOURCE_DIR}/third_party/libmeshb/sources
+	${CMAKE_CURRENT_SOURCE_DIR}/third_party/fmt/include
+)
+include_directories(${WINGS_INCLUDE_DIRS})
+
+# libraries to link against
+set(WINGS_EXTERNAL_LIBRARIES ${LIBRARIES} ${external_libraries})
+
+# add the extension source
+add_subdirectory(util)
+
 include_directories(${WINGS_STB_LOCATION})
-if (${BUILD_EXAMPLE})
+if (${BUILD_EXAMPLES})
+	# external repositories
 	add_extern_repository(tinyobjloader GIT_REPOSITORY "https://github.com/tinyobjloader/tinyobjloader")
-	add_executable(xwing xwing/main.cpp)
-	target_link_libraries(xwing wings tinyobjloader)
-	set_property(TARGET xwing PROPERTY CXX_STANDARD 14)
+	add_extern_repository(fmt GIT_REPOSITORY "https://github.com/fmtlib/fmt")
+	add_extern_repository(libmeshb GIT_REPOSITORY "https://github.com/LoicMarechal/libMeshb")
+
+	# alpha
+	add_executable(awings apps/alpha/main.cpp)
+	target_link_libraries(awings wings tinyobjloader)
+	set_property(TARGET awings PROPERTY CXX_STANDARD 14)
+
+	# beta
+	add_executable(bwings apps/beta/main.cpp)
+	#add_dependencies(bwings wings wings_util_static)
+	target_link_libraries(bwings wings_util_static wings dl)
+	target_compile_definitions(bwings PUBLIC -DWINGS_SOURCE_DIR="${PROJECT_SOURCE_DIR}")
 endif()
 
 set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES 
 	${CMAKE_CURRENT_SOURCE_DIR}/stb
 	${CMAKE_CURRENT_SOURCE_DIR}/tinyobjloader
 )
-
-option(BUILD_VWING "build vwing" TRUE)
-if (${BUILD_VWING})
-	# add external repositories
-	add_extern_repository(fmt GIT_REPOSITORY "https://github.com/fmtlib/fmt")
-	add_extern_repository(libmeshb GIT_REPOSITORY "https://github.com/LoicMarechal/libMeshb")
-	# set include directories
-	set(WINGS_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/util ${CMAKE_CURRENT_SOURCE_DIR}/third_party
-		${CMAKE_CURRENT_SOURCE_DIR}/third_party/libmeshb/sources
-		${CMAKE_CURRENT_SOURCE_DIR}/third_party/fmt/include
-	)
-	include_directories(${WINGS_INCLUDE_DIRS})
-	# libraries to link against
-	set(WINGS_EXTERNAL_LIBRARIES ${LIBRARIES} ${external_libraries})
-	# add the extension source
-	add_subdirectory(util)
-	# create the executable
-	add_executable(vwing vwing/main.cpp)
-	add_dependencies(vwing wings wings_util_static)
-	target_link_libraries(vwing wings_util_static wings dl)
-	target_compile_definitions(vwing PUBLIC -DWINGS_SOURCE_DIR="${PROJECT_SOURCE_DIR}")
-
-endif()
 
 # utility to remove external repositories
 add_custom_target(clean_extern COMMAND rm -rf ${extern_repositories})

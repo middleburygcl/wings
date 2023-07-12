@@ -3,7 +3,7 @@
 #include <memory>
 #include <set>
 
-#include "../wings.h"
+#include "../../wings.h"
 #include "colormaps.h"
 #include "glm.h"
 #include "io.h"
@@ -265,8 +265,6 @@ class MeshScene : public wings::Scene {
     mat4f center_translation, inverse_center_translation;
     mat4f translation_matrix;
     vec3f center, eye;
-    int width{800};
-    int height{600};
     float size{1.0};
     float fov{45};
     double x{0}, y{0};
@@ -284,11 +282,12 @@ class MeshScene : public wings::Scene {
     const PickableObject* picked{nullptr};
     int field_mode{0};
     int field_index{0};
+    glCanvas canvas{800, 600};
   };
 
  public:
   MeshScene(const Mesh& mesh)
-      : mesh_(mesh), shaders_(std::string(WINGS_SOURCE_DIR) + "/vwing/") {
+      : mesh_(mesh), shaders_(std::string(WINGS_SOURCE_DIR) + "/apps/beta/") {
     context_ =
         wings::RenderingContext::create(wings::RenderingContextType::kOpenGL);
     context_->print();
@@ -333,7 +332,7 @@ class MeshScene : public wings::Scene {
     // can save some computation by not adding eye, but leaving it for now
     auto pixel2world = [&](double u, double v) {
       double d = length(view.center - view.eye);
-      double a = double(view.width) / double(view.height);
+      double a = double(view.canvas.width) / double(view.canvas.height);
       double h = 2.0 * d * tan(view.fov / 2.0);
       double w = a * h;
 
@@ -345,7 +344,8 @@ class MeshScene : public wings::Scene {
       return basis * q + view.eye;
     };
     vec3f ray = unit_vector(
-        pixel2world(x / view.width, /*1.0 - */ y / view.height) - view.eye);
+        pixel2world(x / view.canvas.width, /*1.0 - */ y / view.canvas.height) -
+        view.eye);
 
     // find the closest element
     double tmin = 1e20;
@@ -556,16 +556,16 @@ class MeshScene : public wings::Scene {
       case wings::InputType::MouseMotion: {
         if (input.dragging) {
           if (!input.modifier) {
-            double dx = (view.x - input.x) / view.width;
-            double dy = (view.y - input.y) / view.height;
+            double dx = (view.x - input.x) / view.canvas.width;
+            double dy = (view.y - input.y) / view.canvas.height;
             mat4f R =
                 view.center_translation * view.translation_matrix *
                 glm::rotation(dx, dy) *
                 glm::inverse(view.translation_matrix * view.center_translation);
             view.model_matrix = R * view.model_matrix;
           } else {
-            double dx = -(view.x - input.x) / view.width;
-            double dy = -(view.y - input.y) / view.height;
+            double dx = -(view.x - input.x) / view.canvas.width;
+            double dy = -(view.y - input.y) / view.canvas.height;
             dx *= view.size;
             dy *= view.size;
             mat4f T = glm::translation(dx, dy);
@@ -624,13 +624,14 @@ class MeshScene : public wings::Scene {
         else if (input.key == 'w')
           view.show_wireframe = input.ivalue > 0;
         else if (input.key == 'W') {
-          width_ = input.ivalue;
-          height_ = int(0.75 * width_);
-          view.width = width_;
-          view.height = height_;
-          context_->resize(view.width, view.height);
-          view.projection_matrix = glm::perspective(
-              view.fov, float(view.width) / float(view.height), 0.1f, 10000.0f);
+          int w = input.ivalue;
+          int h = 0.75 * w;
+          view.canvas.resize(w, h);
+          view.projection_matrix =
+              glm::perspective(45.0, float(w) / float(h), 0.1f, 10000.0f);
+          // save the width and height for the scene to write the image
+          width_ = w;
+          height_ = h;
           // the wings rendering context is currently in the render section.
           // there should be another image request after the size is updated
           updated = false;
@@ -705,7 +706,7 @@ class MeshScene : public wings::Scene {
     if (!updated) return false;
 
     // write shader uniforms
-    GL_CALL(glViewport(0, 0, view.width, view.height));
+    GL_CALL(glViewport(0, 0, view.canvas.width, view.canvas.height));
     GL_CALL(glClearColor(1.0f, 1.0f, 1.0f, 1.0f));
     GL_CALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
     glEnable(GL_DEPTH_TEST);
@@ -798,7 +799,8 @@ class MeshScene : public wings::Scene {
       shader.set_uniform("u_ModelViewProjectionMatrix", mvp_matrix);
       shader.set_uniform("u_ModelViewMatrix", model_view_matrix);
       shader.set_uniform("u_NormalMatrix", normal_matrix);
-      // shader.set_uniform("u_ViewportSize", screen_size_);
+      vec2f screen_size({1.0f * view.canvas.width, 1.0f * view.canvas.height});
+      shader.set_uniform("u_ViewportSize", screen_size);
 
       shader.set_uniform("u_umin", primitive.umin());
       shader.set_uniform("u_umax", primitive.umax());
@@ -840,12 +842,13 @@ class MeshScene : public wings::Scene {
                       view.projection_matrix);
 
     // save the pixels in the wings::Scene
+    view.canvas.bind();
     channels_ = 3;
-    int stride = channels_ * view.width;
+    int stride = channels_ * view.canvas.width;
     // stride += (stride % 4) ? (4 - stride % 4) : 0;
-    pixels_.resize(stride * view.height);
+    pixels_.resize(stride * view.canvas.height);
     GL_CALL(glPixelStorei(GL_PACK_ALIGNMENT, 4));
-    GL_CALL(glReadPixels(0, 0, view.width, view.height, GL_RGB,
+    GL_CALL(glReadPixels(0, 0, view.canvas.width, view.canvas.height, GL_RGB,
                          GL_UNSIGNED_BYTE, pixels_.data()));
     glFinish();
 
@@ -887,7 +890,8 @@ class MeshScene : public wings::Scene {
     vec3f up{0, 1, 0};
     view.view_matrix = glm::lookat(view.eye, view.center, up);
     view.projection_matrix = glm::perspective(
-        view.fov, float(view.width) / float(view.height), 0.1f, 10000.0f);
+        view.fov, float(view.canvas.width) / float(view.canvas.height), 0.1f,
+        10000.0f);
     view.translation_matrix.eye();
 
     // vertex arrays are not shared between OpenGL contexts in different threads

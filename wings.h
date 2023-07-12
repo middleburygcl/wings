@@ -117,6 +117,17 @@ class Scene {
   int channels_{3};
 };
 
+struct glCanvas {
+  glCanvas(int w, int h) : width(w), height(h) { create(); }
+  ~glCanvas() { release(); }
+  int width{0}, height{0};
+  int renderbuffer{-1}, framebuffer{-1}, depthbuffer{-1};
+  void bind();
+  void create();
+  void resize(int w, int h);
+  void release();
+};
+
 class WebsocketRenderer;
 class RenderingServer {
  public:

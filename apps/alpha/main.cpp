@@ -1,11 +1,11 @@
 #include <array>
+#include <cassert>
 #include <cmath>
 #include <iostream>
 #include <set>
-#include <cassert>
 
-#include "../tinyobjloader/tiny_obj_loader.h"
-#include "../wings.h"
+#include "../../third_party/tinyobjloader/tiny_obj_loader.h"
+#include "../../wings.h"
 
 #define GL_GLEXT_PROTOTYPES
 #ifdef __APPLE__
@@ -377,41 +377,6 @@ class Mesh {
   std::vector<unsigned int> edges_;
 };
 
-struct Canvas {
-  int width, height;
-  GLuint renderbuffer, framebuffer, depthbuffer;
-  void bind() { GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, framebuffer)); }
-  void create() {
-    GL_CALL(glGenFramebuffers(1, &framebuffer));
-    GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, framebuffer));
-
-    GL_CALL(glGenRenderbuffers(1, &renderbuffer));
-    GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer));
-    GL_CALL(glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8, width, height));
-
-    GL_CALL(glGenRenderbuffers(1, &depthbuffer));
-    GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, depthbuffer));
-    GL_CALL(glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width,
-                                  height));
-
-    GL_CALL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                                      GL_RENDERBUFFER, renderbuffer));
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-                              GL_RENDERBUFFER, depthbuffer);
-    assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
-  }
-  void resize(int w, int h) {
-    bind();
-    GL_CALL(glDeleteRenderbuffers(1, &renderbuffer));
-    GL_CALL(glDeleteRenderbuffers(1, &depthbuffer));
-    GL_CALL(glDeleteFramebuffers(1, &framebuffer));
-    // renderbuffer = depthbuffer = framebuffer = 0;
-    width = w;
-    height = h;
-    create();
-  }
-};
-
 namespace wings {
 class glMeshScene : public Scene {
   struct ClientView {
@@ -420,13 +385,11 @@ class glMeshScene : public Scene {
     mat4f projection_matrix;
     mat4f center_translation, inverse_center_translation;
     vec3f center, eye;
-    int width{800};
-    int height{600};
     double x{0}, y{0};
     GLuint vertex_array;
     bool draw_edges{true};
     bool draw_triangles{true};
-    Canvas canvas{800, 600, 0, 0, 0};
+    glCanvas canvas{800, 600};
   };
 
  public:
@@ -543,10 +506,10 @@ void glMeshScene::onconnect() {
   vec3f up{0, 1, 0};
   view.view_matrix = glm::lookat(view.eye, view.center, up);
   view.projection_matrix = glm::perspective(
-      45.0f, float(view.width) / float(view.height), 0.1f, 1000.0f);
+      45.0f, float(view.canvas.width) / float(view.canvas.height), 0.1f,
+      1000.0f);
 
   GL_CALL(glGenVertexArrays(1, &view.vertex_array));
-  view.canvas.create();
 }
 
 bool glMeshScene::render(const ClientInput& input, int client_idx,
@@ -557,8 +520,8 @@ bool glMeshScene::render(const ClientInput& input, int client_idx,
   switch (input.type) {
     case InputType::MouseMotion: {
       if (input.dragging) {
-        double dx = (view.x - input.x) / view.width;
-        double dy = (view.y - input.y) / view.height;
+        double dx = (view.x - input.x) / view.canvas.width;
+        double dy = (view.y - input.y) / view.canvas.height;
         mat4f R = view.center_translation * glm::rotation(dx, dy) *
                   view.inverse_center_translation;
         view.model_matrix = R * view.model_matrix;
@@ -579,21 +542,14 @@ bool glMeshScene::render(const ClientInput& input, int client_idx,
         view.draw_triangles = !view.draw_triangles;
         updated = true;
       } else if (input.key == 'W') {
-        width_ = input.ivalue;
-        height_ = int(0.75 * width_);
-        view.width = width_;
-        view.height = height_;
-#if 0
-        context_->resize(view.width, view.height);
-
-#else
-        view.canvas.resize(width_, height_);
-        std::cout << "width = " << width_ << " height = " << height_
-                  << std::endl;
-
-#endif
-        view.projection_matrix = glm::perspective(
-            45.0, float(view.width) / float(view.height), 0.1f, 10000.0f);
+        int w = input.ivalue;
+        int h = 0.75 * w;
+        view.canvas.resize(w, h);
+        view.projection_matrix =
+            glm::perspective(45.0, float(w) / float(h), 0.1f, 10000.0f);
+        // save the width and height for the scene to write the image
+        width_ = w;
+        height_ = h;
         // the wings rendering context is currently in the render section.
         // there should be another image request after the size is updated
         updated = false;
@@ -635,7 +591,7 @@ bool glMeshScene::render(const ClientInput& input, int client_idx,
   GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
   // draw
-  GL_CALL(glViewport(0, 0, view.width, view.height));
+  GL_CALL(glViewport(0, 0, view.canvas.width, view.canvas.height));
   GL_CALL(glClearColor(1.0f, 1.0f, 1.0f, 1.0f));
   GL_CALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
   glEnable(GL_DEPTH_TEST);
@@ -665,14 +621,13 @@ bool glMeshScene::render(const ClientInput& input, int client_idx,
 
   view.canvas.bind();
   channels_ = 3;
-  GLsizei stride = channels_ * view.width;
+  GLsizei stride = channels_ * view.canvas.width;
   stride += (stride % 4) ? (4 - stride % 4) : 0;
-  // pixels_.resize(view.width * view.height * 3 * 2);
-  pixels_.resize(stride * view.height);
+  pixels_.resize(stride * view.canvas.height);
   GL_CALL(glPixelStorei(GL_PACK_ALIGNMENT, 4));
   // GL_CALL(glReadBuffer(GL_BACK));
-  GL_CALL(glReadPixels(0, 0, view.width, view.height, GL_RGB, GL_UNSIGNED_BYTE,
-                       pixels_.data()));
+  GL_CALL(glReadPixels(0, 0, view.canvas.width, view.canvas.height, GL_RGB,
+                       GL_UNSIGNED_BYTE, pixels_.data()));
   glFinish();
 
   return true;
