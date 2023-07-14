@@ -10,10 +10,11 @@ When running `wings` applications on a remote server, remember to forward the po
 
 ### **core dependencies**
 
-- git
-- CMake (>= 3.1)
-- c++ compiler with c++14 support
-- OpenGL (with `EGL` on Linux and `CoreGL` on OS X - these should be installed alongside `OpenGL`)
+- `git`,
+- `CMake` (>= 3.1)
+- `C++` compiler with `C++14` support
+- `OpenGL` (with `EGL` on Linux and `CoreGL` on OS X - these should be installed alongside `OpenGL`),
+- `stb` for writing JPEG images before encoding them and sending them to a client (this can be omitted if you are already using `stb` in your project).
 
 #### **optional dependencies (to run the sample applications)**
 
@@ -60,6 +61,8 @@ It would also be possible to encode the client messages using JSON or protocol b
 
 The core `wings` functionality is designed as a single-header, single-source library (`wings.h` and `wings.cpp`). The `CMake` configuration will build the `wings` library, however, you can also directly compile `wings.cpp` while setting the include path to contain the `wings` repository.
 
+If you are already using `stb` in your own project and are compiling the `stbi_write_jpg_to_func` function, please set the `WINGS_STB_LOCATION` to the root `stb` directory.
+
 On the server-side, you will need to define a class that inherits from the `Scene` class which (1) creates the `RenderingContext` and (2) defines **two** methods: `onconnect` and `render`.
 
 - The `RenderingContext` can be created by calling the static `RenderingContext::create` function which accepts an `enum` with the type of context to create (currently only `kOpenGL` is supported).
@@ -80,9 +83,9 @@ This is a minimal, self-contained example that includes everything needed to set
 
 This is a more complete program for rendering mixed-element meshes consisting of lines, triangles, quads, polygons, tetrahedra, prisms, pyramids and polyhedra. `vwing` also sets up a few default "fields" (attributes) corresponding to the element group number (or reference) or the cell id. You can cycle through the available fields by pressing the `f` key. `vwing` supports clipping planes as well as element "picking" and prints a message in the browser with the picked element information. After picking an element, you can press `c` to center the view on the picked element.
 
-#### license
+#### **LICENSE**
 
-All `wings` source code (`wings.h`, `wings.cpp` as well as all C++, HTML, JavaScript and GLSL code for the apps) is distributed under the Apache 2.0 License. Please see the notice below.
+All `wings` source code (`wings.h`, `wings.cpp` as well as all `C++`, `HTML`, `JavaScript` and `GLSL` code for the apps) is distributed under the Apache-2.0 License.
 
 Copyright 2023 Philip Claude Caplan
 

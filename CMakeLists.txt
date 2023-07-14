@@ -56,10 +56,10 @@ add_library(wings SHARED wings.cpp)
 set_property(TARGET wings PROPERTY CXX_STANDARD 14)
 target_link_libraries(wings ${LIBRARIES})
 
-option(BUILD_UTILITIES "build examples & utilities" TRUE)
+option(WINGS_BUILD_UTILITIES "build examples & utilities" TRUE)
 
-set(WINGS_STB_LOCATION "stb" CACHE STRING "location of stb installation")
-if (${WINGS_STB_LOCATION} MATCHES "stb")
+set(WINGS_STB_LOCATION "__stb_not_included__" CACHE STRING "location of stb installation")
+if (${WINGS_STB_LOCATION} MATCHES "__stb_not_included__")
 	add_extern_repository(stb GIT_REPOSITORY "https://github.com/nothings/stb" SKIP_CONFIG TRUE)
 	set(WINGS_STB_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/third_party/stb)
 	set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_CURRENT_SOURCE_DIR}/stb)
@@ -77,7 +77,7 @@ include_directories(${WINGS_INCLUDE_DIRS})
 set(WINGS_EXTERNAL_LIBRARIES ${LIBRARIES} ${external_libraries})
 
 include_directories(${WINGS_STB_LOCATION})
-if (${BUILD_UTILITIES})
+if (${WINGS_BUILD_UTILITIES})
 	# external repositories
 	add_extern_repository(tinyobjloader GIT_REPOSITORY "https://github.com/tinyobjloader/tinyobjloader")
 	add_extern_repository(fmt GIT_REPOSITORY "https://github.com/fmtlib/fmt")
