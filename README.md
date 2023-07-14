@@ -2,7 +2,7 @@
 
 `wings` is a web interface for graphics applications. It is primarily intended for server-side rendering of meshes and solution fields for scientific applications, in which a mesh might be stored on a remote cluster or a cloud virtual machine (e.g. using GCP or AWS).
 
-`wings` directly manages `OpenGL` contexts and handles sharing contexts between threads. There is no dependency on an `OpenGL` function loader (such as `glad`) or a window or event manager (such as `GLFW`). It may be possible to support `Vulkan` in the future (the design of the rendering context structure directly supports this), but I have no experience developing with `Vulkan` yet so there are no examples here (please feel free to contribute with a pull request!). There is some initial support for directly serving the client HTML pages using a TCP server, however, this needs to be tested further. I recommend opening the client HTML pages locally for now.
+`wings` directly manages `OpenGL` contexts and handles sharing contexts between threads. There is no dependency on an `OpenGL` function loader (such as `glad`) or a window or event manager (such as `GLFW`). It may be possible to support `Vulkan` in the future (the design of the rendering context structure directly supports this), but I have no experience developing with `Vulkan` yet so there are no examples here (please feel free to contribute with a pull request!). There is some initial support for directly serving the client HTML pages using a TCP server, however, this needs to be tested further. I recommend opening the client HTML pages locally for now, or open the pages which are hosted on GitHub, for example, https://philipclaude.github.io/wings/vwing/.
 
 Some examples are provided in the `apps` directory. The `util` directory also contains some utilities for creating new applications.
 
@@ -29,14 +29,15 @@ The utilities and sample applications require a few external repositories for IO
    `$ git clone https://github.com/philipclaude/wings.git`
 
 2. Build `wings`:
+
    - `$ mkdir wings/build`
    - `$ cd wings/build && cmake ../`
    - `$ make`
 
-4. Run the example program (`xwing`):
+3. Run the example program (`xwing`):
    `$ bin/xwing`
 
-5. Connect to the server by opening `wings/apps/xwing/index.html` and you should see an icosahedron. Click and drag to rotate the mesh!
+4. Connect to the server by opening `wings/apps/xwing/index.html` and you should see an icosahedron. Click and drag to rotate the mesh!
 
 Alternatively, the more complete hybrid mesh viewer can be run (use `bin/vwing` and open `wings/apps/vwing/index.html`).
 
@@ -60,9 +61,10 @@ It would also be possible to encode the client messages using JSON or protocol b
 The core `wings` functionality is designed as a single-header, single-source library (`wings.h` and `wings.cpp`). The `CMake` configuration will build the `wings` library, however, you can also directly compile `wings.cpp` while setting the include path to contain the `wings` repository.
 
 On the server-side, you will need to define a class that inherits from the `Scene` class which (1) creates the `RenderingContext` and (2) defines **two** methods: `onconnect` and `render`.
-   - The `RenderingContext` can be created by calling the static `RenderingContext::create` function which accepts an `enum` with the type of context to create (currently only `kOpenGL` is supported).
-   - The `onconnect` function is called when a new client is connected - the image displayed by this client will be indexed with a particular client/view index (this is how multiple client views are supported).
-   - The `render` function should render the scene according to the aforementioned client/view index and the input `ClientInput` structure. This structure contains information about the type of event (key-value, mouse motion, double click, scroll) and any corresponding data. The end of the render function should fill the RGB values of the `pixels_` (a `protected` member of the `Scene` class), which is a vector of bytes (`unsigned char`) of size `3 x width x height`. `wings` will then automatically encode the image as a string and send it to the browser which can be rendered by assigning the `src` attribute of an HTML `img` element.
+
+- The `RenderingContext` can be created by calling the static `RenderingContext::create` function which accepts an `enum` with the type of context to create (currently only `kOpenGL` is supported).
+- The `onconnect` function is called when a new client is connected - the image displayed by this client will be indexed with a particular client/view index (this is how multiple client views are supported).
+- The `render` function should render the scene according to the aforementioned client/view index and the input `ClientInput` structure. This structure contains information about the type of event (key-value, mouse motion, double click, scroll) and any corresponding data. The end of the render function should fill the RGB values of the `pixels_` (a `protected` member of the `Scene` class), which is a vector of bytes (`unsigned char`) of size `3 x width x height`. `wings` will then automatically encode the image as a string and send it to the browser which can be rendered by assigning the `src` attribute of an HTML `img` element.
 
 #### **reminders**
 
@@ -77,3 +79,21 @@ This is a minimal, self-contained example that includes everything needed to set
 #### **`vwing`**: hybrid mesh viewer
 
 This is a more complete program for rendering mixed-element meshes consisting of lines, triangles, quads, polygons, tetrahedra, prisms, pyramids and polyhedra. `vwing` also sets up a few default "fields" (attributes) corresponding to the element group number (or reference) or the cell id. You can cycle through the available fields by pressing the `f` key. `vwing` supports clipping planes as well as element "picking" and prints a message in the browser with the picked element information. After picking an element, you can press `c` to center the view on the picked element.
+
+#### license
+
+All `wings` source code (`wings.h`, `wings.cpp` as well as all C++, HTML, JavaScript and GLSL code for the apps) is distributed under the Apache 2.0 License. Please see the notice below.
+
+Copyright 2023 Philip Claude Caplan
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
