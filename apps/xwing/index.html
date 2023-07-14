@@ -118,6 +118,7 @@
 
 <script>
 
+  let currentView = undefined;
   let n_views = 1;
   let newView = function() {
     let tabs = document.getElementById('views-tab-content');
@@ -159,7 +160,7 @@
     // add client to websocket server
   }
 
-
+  let views = new Array();
   let ws;
   let img = document.getElementById('image');
   let connect = function (url) {

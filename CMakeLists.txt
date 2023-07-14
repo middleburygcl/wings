@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.1)
 
 project(wings LANGUAGES CXX)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS "-O3 -fPIC")
 set(CMAKE_C_FLAGS "-O3 -fPIC")
@@ -56,12 +56,7 @@ add_library(wings SHARED wings.cpp)
 set_property(TARGET wings PROPERTY CXX_STANDARD 14)
 target_link_libraries(wings ${LIBRARIES})
 
-option(BUILD_EXAMPLES "build examples" TRUE)
-option(BUILD_UTILITIES "build utilities" FALSE)
-
-if (${BUILD_EXAMPLES})
-	set(${BUILD_UTILITIES} TRUE)
-endif()
+option(BUILD_UTILITIES "build examples & utilities" TRUE)
 
 set(WINGS_STB_LOCATION "stb" CACHE STRING "location of stb installation")
 if (${WINGS_STB_LOCATION} MATCHES "stb")
@@ -81,32 +76,26 @@ include_directories(${WINGS_INCLUDE_DIRS})
 # libraries to link against
 set(WINGS_EXTERNAL_LIBRARIES ${LIBRARIES} ${external_libraries})
 
-# add the extension source
-add_subdirectory(util)
-
 include_directories(${WINGS_STB_LOCATION})
-if (${BUILD_EXAMPLES})
+if (${BUILD_UTILITIES})
 	# external repositories
 	add_extern_repository(tinyobjloader GIT_REPOSITORY "https://github.com/tinyobjloader/tinyobjloader")
 	add_extern_repository(fmt GIT_REPOSITORY "https://github.com/fmtlib/fmt")
 	add_extern_repository(libmeshb GIT_REPOSITORY "https://github.com/LoicMarechal/libMeshb")
 
-	# alpha
-	add_executable(awing apps/awing/main.cpp)
-	target_link_libraries(awing wings tinyobjloader)
-	set_property(TARGET awing PROPERTY CXX_STANDARD 14)
+	# add the extension source
+	add_subdirectory(util)
 
-	# beta
-	add_executable(bwing apps/bwing/main.cpp)
-	#add_dependencies(bwings wings wings_util_static)
-	target_link_libraries(bwing wings_util_static wings dl)
-	target_compile_definitions(bwing PUBLIC -DWINGS_SOURCE_DIR="${PROJECT_SOURCE_DIR}")
+	# xwing (example)
+	add_executable(xwing apps/xwing/main.cpp)
+	target_link_libraries(xwing wings tinyobjloader)
+	set_property(TARGET xwing PROPERTY CXX_STANDARD 14)
+
+	# vwing
+	add_executable(vwing apps/vwing/main.cpp)
+	target_link_libraries(vwing wings_util_static wings dl)
+	target_compile_definitions(vwing PUBLIC -DWINGS_SOURCE_DIR="${PROJECT_SOURCE_DIR}")
 endif()
-
-set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES 
-	${CMAKE_CURRENT_SOURCE_DIR}/stb
-	${CMAKE_CURRENT_SOURCE_DIR}/tinyobjloader
-)
 
 # utility to remove external repositories
 add_custom_target(clean_extern COMMAND rm -rf ${extern_repositories})

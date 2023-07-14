@@ -287,7 +287,7 @@ class MeshScene : public wings::Scene {
 
  public:
   MeshScene(const Mesh& mesh)
-      : mesh_(mesh), shaders_(std::string(WINGS_SOURCE_DIR) + "/apps/beta/") {
+      : mesh_(mesh), shaders_(std::string(WINGS_SOURCE_DIR) + "/apps/vwing/") {
     context_ =
         wings::RenderingContext::create(wings::RenderingContextType::kOpenGL);
     context_->print();
@@ -468,9 +468,9 @@ class MeshScene : public wings::Scene {
       change_field(f, 0);  // activate rank 0
 
       field_names_.clear();
-      for (const auto& [name, f] : fields->fields()) {
-        for (int i = 0; i < f.ranks(); i++) {
-          field_names_.push_back({name, i});
+      for (const auto& fld : fields->fields()) {
+        for (int i = 0; i < fld.second.ranks(); i++) {
+          field_names_.push_back({fld.first, i});
         }
       }
 

@@ -18,11 +18,6 @@
 #include <GL/gl.h>
 #endif
 
-enum TextureIndex {
-  POINT_TEXTURE = 0,
-  INDEX_TEXTURE = 1,
-};
-
 #define GL_CALL(X)                                                           \
   {                                                                          \
     (X);                                                                     \
@@ -283,7 +278,7 @@ static std::string get_base_dir(const std::string& filepath) {
   return "";
 }
 
-void read_obj(const std::string& filename, std::vector<float>& points,
+void load_obj(const std::string& filename, std::vector<float>& points,
               std::vector<unsigned int>& triangles) {
   tinyobj::attrib_t attrib;
   std::vector<tinyobj::shape_t> shapes;
@@ -324,6 +319,47 @@ void read_obj(const std::string& filename, std::vector<float>& points,
   }  // loop over shape
 }
 
+void load_icosahedron(std::vector<float>& points,
+                      std::vector<unsigned int>& triangles) {
+  float t = (1.0 + std::sqrt(5.0)) / 2.0;
+
+  float coordinates[12][3] = {{t, 1, 0}, {-t, 1, 0}, {t, -1, 0}, {-t, -1, 0},
+                              {1, 0, t}, {1, 0, -t}, {-1, 0, t}, {-1, 0, -t},
+                              {0, t, 1}, {0, -t, 1}, {0, t, -1}, {0, -t, -1}};
+  points.resize(36);
+  for (int i = 0; i < 12; i++) {
+    for (int d = 0; d < 3; d++)
+      points[3 * i + d] = coordinates[i][d] / std::sqrt(1 + t * t);
+  }
+
+  unsigned int tris[20][3] = {
+      {0, 8, 4},   // 0
+      {0, 5, 10},  // 1
+      {2, 4, 9},   // 2
+      {2, 11, 5},  // 3
+      {1, 6, 8},   // 4
+      {1, 10, 7},  // 5
+      {3, 9, 6},   // 6
+      {3, 7, 11},  // 7
+      {0, 10, 8},  // 8
+      {1, 8, 10},  // 9
+      {2, 9, 11},  // 10
+      {3, 11, 9},  // 11
+      {4, 2, 0},   // 12
+      {5, 0, 2},   // 13
+      {6, 1, 3},   // 14
+      {7, 3, 1},   // 15
+      {8, 6, 4},   // 16
+      {9, 4, 6},   // 17
+      {10, 5, 7},  // 18
+      {11, 7, 5}   // 19
+  };
+
+  triangles.resize(60);
+  for (int i = 0; i < 20; i++)
+    for (int d = 0; d < 3; d++) triangles[3 * i + d] = tris[i][d];
+}
+
 static const char* vs = R"(
 #version 330 core
 uniform mat4 u_ModelMatrix;
@@ -344,8 +380,7 @@ void main() {
 
 class Mesh {
  public:
-  Mesh(const std::string& filename) {
-    read_obj(filename, points_, triangles_);
+  void calculate_edges() {
     std::set<std::pair<unsigned int, unsigned int>> e;
     edges_.reserve(triangles_.size() * 2);
     for (size_t k = 0; k < triangles_.size() / 3; k++) {
@@ -364,7 +399,9 @@ class Mesh {
   }
 
   const auto& points() const { return points_; }
+  auto& points() { return points_; }
   const auto& triangles() const { return triangles_; }
+  auto& triangles() { return triangles_; }
   const auto& edges() const { return edges_; }
 
   const auto& coordinate(int64_t k, int d) const { return points_[3 * k + d]; }
@@ -378,7 +415,7 @@ class Mesh {
 };
 
 namespace wings {
-class glMeshScene : public Scene {
+class MeshScene : public Scene {
   struct ClientView {
     mat4f model_matrix;
     mat4f view_matrix;
@@ -393,7 +430,7 @@ class glMeshScene : public Scene {
   };
 
  public:
-  glMeshScene(const Mesh& mesh) : mesh_(mesh) {
+  MeshScene(const Mesh& mesh) : mesh_(mesh) {
     context_ = RenderingContext::create(RenderingContextType::kOpenGL);
     context_->print();
     setup();
@@ -414,7 +451,7 @@ class glMeshScene : public Scene {
   std::vector<ClientView> view_;
 };
 
-void glMeshScene::setup() {
+void MeshScene::setup() {
   context_->make_context_current();
 
   // write points
@@ -474,7 +511,7 @@ void glMeshScene::setup() {
   GL_CALL(glLinkProgram(program));
 }
 
-void glMeshScene::onconnect() {
+void MeshScene::onconnect() {
   // set up the view
   view_.emplace_back();
   ClientView& view = view_.back();
@@ -512,8 +549,8 @@ void glMeshScene::onconnect() {
   GL_CALL(glGenVertexArrays(1, &view.vertex_array));
 }
 
-bool glMeshScene::render(const ClientInput& input, int client_idx,
-                         std::string* msg) {
+bool MeshScene::render(const ClientInput& input, int client_idx,
+                       std::string* msg) {
   ClientView& view = view_[client_idx];
   msg = nullptr;
   bool updated = false;
@@ -641,11 +678,16 @@ int main(int argc, const char** argv) {
   if (argc > 2) ws_port = std::atoi(argv[2]);
   if (argc > 3) tcp_port = std::atoi(argv[3]);
 
-  Mesh mesh(argv[1]);
+  Mesh mesh;
+  if (argc == 1)
+    load_icosahedron(mesh.points(), mesh.triangles());
+  else
+    load_obj(argv[1], mesh.points(), mesh.triangles());
+  mesh.calculate_edges();
 
-  wings::glMeshScene scene(mesh);
+  wings::MeshScene scene(mesh);
   wings::RenderingServer renderer(scene, ws_port);
-  if (tcp_port > 0) renderer.start("../xwing/index.html", tcp_port);
+  if (tcp_port > 0) renderer.start("../apps/awing/index.html", tcp_port);
 
   return 0;
 }
