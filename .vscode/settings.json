@@ -83,5 +83,5 @@
     "vector": "cpp"
   },
   "C_Cpp.default.includePath": ["${workspaceFolder}/**"],
-  "C_Cpp.clang_format_style": "Chromium"
+  "C_Cpp.clang_format_style": "{ BasedOnStyle: Google, AllowShortIfStatementsOnASingleLine: true }"
 }
