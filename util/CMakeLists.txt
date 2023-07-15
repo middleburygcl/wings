@@ -3,7 +3,9 @@ set(SOURCES
   field.cpp
   io.cpp
   log.cpp
-  mesh.cpp)
+  mesh.cpp
+  shader.cpp
+  util.cpp)
 
 # create an object library for all the sources
 add_library(wings_util_src OBJECT ${SOURCES})
