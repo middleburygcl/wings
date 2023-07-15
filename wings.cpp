@@ -47,10 +47,10 @@
 extern "C" {
 #endif
 
-typedef void stbi_write_func(void *context, void *data, int size);
+typedef void stbi_write_func(void* context, void* data, int size);
 
-int stbi_write_jpg_to_func(stbi_write_func *func, void *context, int x, int y,
-                           int comp, const void *data, int quality);
+int stbi_write_jpg_to_func(stbi_write_func* func, void* context, int x, int y,
+                           int comp, const void* data, int quality);
 
 #ifdef __cplusplus
 }
@@ -89,7 +89,7 @@ int stbi_write_jpg_to_func(stbi_write_func *func, void *context, int x, int y,
     bool error = false;                                                      \
     glerr = glGetError();                                                    \
     while (glerr != GL_NO_ERROR) {                                           \
-      const char *message = "";                                              \
+      const char* message = "";                                              \
       switch (glerr) {                                                       \
         case GL_INVALID_ENUM:                                                \
           message = "invalid enum";                                          \
@@ -146,7 +146,7 @@ uint32_t rol(const uint32_t value, const size_t bits) {
   return (value << bits) | (value >> (32 - bits));
 }
 
-uint32_t blk(const std::array<uint32_t, BLOCK_INTS> &b, const size_t i) {
+uint32_t blk(const std::array<uint32_t, BLOCK_INTS>& b, const size_t i) {
   return rol(b[(i + 13) & 15] ^ b[(i + 8) & 15] ^ b[(i + 2) & 15] ^ b[i], 1);
 }
 
@@ -174,8 +174,8 @@ uint32_t blk(const std::array<uint32_t, BLOCK_INTS> &b, const size_t i) {
   z += (w ^ x ^ y) + block[i] + 0xca62c1d6 + rol(v, 5); \
   w = rol(w, 30);
 
-void transform(std::array<uint32_t, 5> &digest,
-               std::array<uint32_t, BLOCK_INTS> &block, uint64_t &transforms) {
+void transform(std::array<uint32_t, 5>& digest,
+               std::array<uint32_t, BLOCK_INTS>& block, uint64_t& transforms) {
   // copy digest to working variables
   uint32_t a = digest[0];
   uint32_t b = digest[1];
@@ -276,8 +276,8 @@ void transform(std::array<uint32_t, 5> &digest,
   transforms++;
 }
 
-void buffer_to_block(const std::string &buffer,
-                     std::array<uint32_t, BLOCK_INTS> &block) {
+void buffer_to_block(const std::string& buffer,
+                     std::array<uint32_t, BLOCK_INTS>& block) {
   // convert the string (byte buffer) to a uint32_t array (MSB)
   for (size_t i = 0; i < BLOCK_INTS; i++) {
     block[i] = (buffer[4 * i + 3] & 0xff) | (buffer[4 * i + 2] & 0xff) << 8 |
@@ -287,7 +287,7 @@ void buffer_to_block(const std::string &buffer,
 }
 
 enum OutputType : uint8_t { kHex, kByte };
-void hash(const std::string &input, std::string &output, OutputType type) {
+void hash(const std::string& input, std::string& output, OutputType type) {
   // initialize the buffer from the input
   std::array<uint32_t, 5> digest = {0x67452301, 0xefcdab89, 0x98badcfe,
                                     0x10325476, 0xc3d2e1f0};
@@ -396,7 +396,7 @@ LICENCE:        Copyright (c) 2001 Bob Trower, Trantor Standard Systems Inc.
 static const unsigned char b64[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-void encodeblock(const unsigned char *x, unsigned char *y, int m) {
+void encodeblock(const unsigned char* x, unsigned char* y, int m) {
   y[0] = b64[(int)(x[0] >> 2)];
   y[1] = b64[(int)(((x[0] & 0x03) << 4) | ((x[1] & 0xf0) >> 4))];
   y[2] =
@@ -404,7 +404,7 @@ void encodeblock(const unsigned char *x, unsigned char *y, int m) {
   y[3] = (m > 2 ? b64[(int)(x[2] & 0x3f)] : '=');
 };
 
-void encode(const char *input, size_t n_input, std::string &output) {
+void encode(const char* input, size_t n_input, std::string& output) {
   std::array<unsigned char, 3> x = {0U, 0U, 0U};
   std::array<unsigned char, 4> y = {0U, 0U, 0U, 0U};
 
@@ -474,7 +474,7 @@ static std::map<EGLint, std::string> egl_error_string = {
 #define RFC6455_OP_CLOSE 0x8
 #define RFC6455_GUID "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 
-int shakehands(int client_fd, const std::string &request) {
+int shakehands(int client_fd, const std::string& request) {
   // GUID defined by RFC6455
   const std::string guid(RFC6455_GUID);
   int out_len;
@@ -487,7 +487,7 @@ int shakehands(int client_fd, const std::string &request) {
   // extract the key and remove whitespace
   int n = idx1 - (idx0 + lookfor.size());
   std::string key = request.substr(idx0 + lookfor.size(), n);
-  const char *ws = " \t\n\r\f\v";
+  const char* ws = " \t\n\r\f\v";
   key.erase(0, key.find_first_not_of(ws));
 
   // encode the key + GUID for the handshake response
@@ -513,15 +513,15 @@ int shakehands(int client_fd, const std::string &request) {
 // https://stackoverflow.com/a/18221570
 uint64_t ntohll(uint64_t x) {
   const unsigned t = 1;
-  if (*(const unsigned char *)&t) {
+  if (*(const unsigned char*)&t) {
     x = ((uint64_t)ntohl(x & 0xffffffffU) << 32) | ntohl((uint32_t)(x >> 32));
   }
   return x;
 }
 #endif
 
-StatusCode parseframe(const std::string &frame, int n_bytes,
-                      std::string &message) {
+StatusCode parseframe(const std::string& frame, int n_bytes,
+                      std::string& message) {
   // I found this website helpful:
   // https://www.openmymind.net/WebSocket-Framing-Masking-Fragmentation-and-More/
   // the first bit must be set to 1 (fin)
@@ -574,7 +574,7 @@ StatusCode parseframe(const std::string &frame, int n_bytes,
   }
 
   // we always have a masking key when receiving a message from the client
-  const char *masking_key = frame.data() + offset;
+  const char* masking_key = frame.data() + offset;
 
   offset += 4;  // account for masking key offset
   if (length + offset != n_bytes) {
@@ -592,10 +592,10 @@ StatusCode parseframe(const std::string &frame, int n_bytes,
 }
 
 void RenderingContext::print(bool with_extensions) {
-  const GLubyte *renderer = glGetString(GL_RENDERER);
-  const GLubyte *vendor = glGetString(GL_VENDOR);
-  const GLubyte *version = glGetString(GL_VERSION);
-  const GLubyte *glsl_version = glGetString(GL_SHADING_LANGUAGE_VERSION);
+  const GLubyte* renderer = glGetString(GL_RENDERER);
+  const GLubyte* vendor = glGetString(GL_VENDOR);
+  const GLubyte* version = glGetString(GL_VERSION);
+  const GLubyte* glsl_version = glGetString(GL_SHADING_LANGUAGE_VERSION);
 
   GLint major, minor;
   glGetIntegerv(GL_MAJOR_VERSION, &major);
@@ -624,7 +624,7 @@ void RenderingContext::print(bool with_extensions) {
 }
 
 struct glRenderingContext : public RenderingContext {
-  glRenderingContext(const RenderingContext *ctx);
+  glRenderingContext(const RenderingContext* ctx);
 
   // void create_renderbuffers(int width, int height);
   void make_context_current();
@@ -642,7 +642,7 @@ struct glRenderingContext : public RenderingContext {
   // GLuint framebuffer, depthbuffer, renderbuffer;
 };
 
-glRenderingContext::glRenderingContext(const RenderingContext *ctx)
+glRenderingContext::glRenderingContext(const RenderingContext* ctx)
     : RenderingContext(RenderingContextType::kOpenGL) {
 #if HAVE_EGL
 
@@ -687,7 +687,7 @@ glRenderingContext::glRenderingContext(const RenderingContext *ctx)
       EGL_NONE,
   };
   EGLContext ref_ctx = EGL_NO_CONTEXT;
-  if (ctx) ref_ctx = static_cast<const glRenderingContext *>(ctx)->context;
+  if (ctx) ref_ctx = static_cast<const glRenderingContext*>(ctx)->context;
   context = eglCreateContext(display, config, ref_ctx, context_attribs);
   EGL_CHECK();
 
@@ -717,7 +717,7 @@ glRenderingContext::glRenderingContext(const RenderingContext *ctx)
   GLint num;
   CGLChoosePixelFormat(attributes, &pix, &num);
   CGLContextObj ref_ctx = nullptr;
-  if (ctx) ref_ctx = static_cast<const glRenderingContext *>(ctx)->context;
+  if (ctx) ref_ctx = static_cast<const glRenderingContext*>(ctx)->context;
   CGLCreateContext(pix, ref_ctx, &context);
   CGLDestroyPixelFormat(pix);
 
@@ -785,7 +785,7 @@ void glRenderingContext::resize_canvas(int width, int height) {
 }
 
 std::unique_ptr<RenderingContext> RenderingContext::create(
-    const RenderingContext &ctx) {
+    const RenderingContext& ctx) {
   if (ctx.type == RenderingContextType::kOpenGL)
     return std::make_unique<glRenderingContext>(&ctx);
   return nullptr;
@@ -800,7 +800,7 @@ std::unique_ptr<RenderingContext> RenderingContext::create(
 
 class WebsocketClient {
  public:
-  WebsocketClient(Scene &scene, int fd, int idx)
+  WebsocketClient(Scene& scene, int fd, int idx)
       : fd_(fd), idx_(idx), scene_(scene) {
     // launch the thread that listens and responds to client messages
     listener_ = std::async(std::launch::async, [this]() { return listen(); });
@@ -902,20 +902,20 @@ class WebsocketClient {
     return StatusCode::kSuccess;
   }
 
-  const auto &bytes() const { return bytes_; }
+  const auto& bytes() const { return bytes_; }
   int64_t n_bytes() const { return n_bytes_; }
   void set_n_bytes(int64_t n) { n_bytes_ = n; }
 
-  static void custom_stbi_write_mem(void *ctx, void *data, int size) {
-    auto *client = static_cast<WebsocketClient *>(ctx);
-    char *dst = (char *)client->bytes().c_str();
-    char *src = (char *)data;
+  static void custom_stbi_write_mem(void* ctx, void* data, int size) {
+    auto* client = static_cast<WebsocketClient*>(ctx);
+    char* dst = (char*)client->bytes().c_str();
+    char* src = (char*)data;
     int64_t n = client->n_bytes();
     for (int i = 0; i < size; i++) dst[n++] = src[i];
     client->set_n_bytes(n);
   }
 
-  std::string makeframe(const std::string &payload, int opcode) {
+  std::string makeframe(const std::string& payload, int opcode) {
     // https://datatracker.ietf.org/doc/html/rfc6455#section-5.2
     std::string header(2, '\0');
     uint64_t length = payload.size();
@@ -951,13 +951,13 @@ class WebsocketClient {
     return header + payload;
   }
 
-  int sendmessage(const std::string &msg, int type) {
+  int sendmessage(const std::string& msg, int type) {
     std::string frame = makeframe(msg, type);
     return send(fd_, frame.c_str(), frame.size(), RFC6455_OP_BINARY);
   }
 
  private:
-  Scene &scene_;
+  Scene& scene_;
   const int fd_;
   const int idx_;
   std::future<StatusCode> listener_;
@@ -971,7 +971,7 @@ class WebsocketClient {
 // The server will render the scene according to the current client's view.
 class WebsocketRenderer {
  public:
-  WebsocketRenderer(Scene &scene, int port) : scene_(scene), port_(port) {}
+  WebsocketRenderer(Scene& scene, int port) : scene_(scene), port_(port) {}
   int port() const { return port_; }
   StatusCode start() {
     // create a socket for the server
@@ -990,7 +990,7 @@ class WebsocketRenderer {
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = INADDR_ANY;
     server.sin_port = htons(port_);
-    if (bind(server_fd, (struct sockaddr *)&server, sizeof(server)) < 0) {
+    if (bind(server_fd, (struct sockaddr*)&server, sizeof(server)) < 0) {
       close(server_fd);
       return StatusCode::kBindError;
     }
@@ -1008,7 +1008,7 @@ class WebsocketRenderer {
         // accept a connection from the client
         struct sockaddr_in client;
         socklen_t len = sizeof(struct sockaddr_in);
-        int client_fd = accept(server_fd, (struct sockaddr *)&client, &len);
+        int client_fd = accept(server_fd, (struct sockaddr*)&client, &len);
         if (client_fd < 0) continue;  // no client connected
 
         // receive the request from the client
@@ -1028,7 +1028,7 @@ class WebsocketRenderer {
           return StatusCode::kHandshakeError;
         }
 
-        char *connected_ip = inet_ntoa(client.sin_addr);
+        char* connected_ip = inet_ntoa(client.sin_addr);
         int client_port = ntohs(client.sin_port);
         std::cout << "--> connected to " << connected_ip << ":" << client_port
                   << "(" << client_fd << ")" << std::endl;
@@ -1044,21 +1044,21 @@ class WebsocketRenderer {
   }
 
  private:
-  Scene &scene_;
+  Scene& scene_;
   std::atomic<bool> run_;
   std::future<StatusCode> server_;
   std::vector<std::unique_ptr<WebsocketClient>> client_;
   int port_{-1};
 };
 
-RenderingServer::RenderingServer(Scene &scene, int port) : scene_(scene) {
+RenderingServer::RenderingServer(Scene& scene, int port) : scene_(scene) {
   renderer_ = std::make_unique<WebsocketRenderer>(scene, port);
   renderer_->start();
 }
 
 RenderingServer::~RenderingServer() {}
 
-StatusCode RenderingServer::start(const std::string &html_file, int port) {
+StatusCode RenderingServer::start(const std::string& html_file, int port) {
   if (port < 0) std::cout << "no port, not starting TCP server" << std::endl;
 
   // start the TCP server
@@ -1070,7 +1070,7 @@ StatusCode RenderingServer::start(const std::string &html_file, int port) {
   int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
   if (socket_fd < 0) return StatusCode::kCreateSocketError;
 
-  if (bind(socket_fd, (sockaddr *)&addr, sizeof(addr)) < 0)
+  if (bind(socket_fd, (sockaddr*)&addr, sizeof(addr)) < 0)
     return StatusCode::kBindError;
 
   if (listen(socket_fd, MAX_CLIENTS) < 0) return StatusCode::kListenError;
@@ -1100,7 +1100,7 @@ StatusCode RenderingServer::start(const std::string &html_file, int port) {
         socklen_t len = sizeof(addr);
         while (listen_) {
           // TODO: sleep this thread?
-          int client_fd = accept(socket_fd, (sockaddr *)&addr, &len);
+          int client_fd = accept(socket_fd, (sockaddr*)&addr, &len);
           if (client_fd < 0) return StatusCode::kConnectError;
 
           // send the HTML page to the client
