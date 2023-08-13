@@ -50,7 +50,7 @@ function(add_extern_repository name)
 endfunction()
 
 # external repositories
-set(external_libraries fmt Meshb.7 tinyobjloader)
+set(external_libraries fmt)
 
 add_library(wings SHARED wings.cpp)
 set_property(TARGET wings PROPERTY CXX_STANDARD 14)
@@ -114,6 +114,7 @@ if (${WINGS_BUILD_APPS})
 	add_extern_repository(fmt GIT_REPOSITORY "https://github.com/fmtlib/fmt")
 	add_extern_repository(libmeshb GIT_REPOSITORY "https://github.com/LoicMarechal/libMeshb")
 	add_library(wings_io_src OBJECT util/io.cpp)
+	target_link_libraries(wings_io_src Meshb.7 tinyobjloader)
 
 	# xwing (example)
 	add_executable(xwing apps/xwing/main.cpp)
@@ -127,6 +128,6 @@ if (${WINGS_BUILD_APPS})
 endif()
 
 # utility to remove external repositories
-add_custom_target(clean_extern COMMAND rm -rf ${extern_repositories})
+add_custom_target(wings_clean_extern COMMAND rm -rf ${extern_repositories})
 
 
