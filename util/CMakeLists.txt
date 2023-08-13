@@ -1,7 +1,6 @@
 # add all the source files
 set(SOURCES
   field.cpp
-  io.cpp
   log.cpp
   mesh.cpp
   shader.cpp

@@ -56,7 +56,8 @@ add_library(wings SHARED wings.cpp)
 set_property(TARGET wings PROPERTY CXX_STANDARD 14)
 target_link_libraries(wings ${LIBRARIES})
 
-option(WINGS_BUILD_UTILITIES "build examples & utilities" TRUE)
+option(WINGS_BUILD_UTIL "build utilities" TRUE)
+option(WINGS_BUILD_APPS "build examples & applications" TRUE)
 
 set(WINGS_STB_LOCATION "__stb_not_included__" CACHE STRING "location of stb installation")
 if (${WINGS_STB_LOCATION} MATCHES "__stb_not_included__")
@@ -77,14 +78,19 @@ include_directories(${WINGS_INCLUDE_DIRS})
 set(WINGS_EXTERNAL_LIBRARIES ${LIBRARIES} ${external_libraries})
 
 include_directories(${WINGS_STB_LOCATION})
-if (${WINGS_BUILD_UTILITIES})
+
+
+if (${WINGS_BUILD_UTIL})
+	# add the utilities source
+	add_subdirectory(util)
+endif()
+
+if (${WINGS_BUILD_APPS})
 	# external repositories
 	add_extern_repository(tinyobjloader GIT_REPOSITORY "https://github.com/tinyobjloader/tinyobjloader")
 	add_extern_repository(fmt GIT_REPOSITORY "https://github.com/fmtlib/fmt")
 	add_extern_repository(libmeshb GIT_REPOSITORY "https://github.com/LoicMarechal/libMeshb")
-
-	# add the extension source
-	add_subdirectory(util)
+	add_library(wings_io_src OBJECT util/io.cpp)
 
 	# xwing (example)
 	add_executable(xwing apps/xwing/main.cpp)
@@ -93,7 +99,7 @@ if (${WINGS_BUILD_UTILITIES})
 
 	# vwing
 	add_executable(vwing apps/vwing/main.cpp)
-	target_link_libraries(vwing wings_util_static wings dl)
+	target_link_libraries(vwing wings_util_static wings_io_src wings dl)
 	target_compile_definitions(vwing PUBLIC -DWINGS_SOURCE_DIR="${PROJECT_SOURCE_DIR}")
 endif()
 
