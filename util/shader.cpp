@@ -28,7 +28,7 @@ std::string get_shader(const std::string& filename) {
   std::string content;
   std::ifstream file_stream(filename.c_str(), std::ios::in);
 
-  ASSERT(file_stream.is_open()) << "could not read file " << filename;
+  WINGS_ASSERT(file_stream.is_open()) << "could not read file " << filename;
 
   std::string line = "";
   while (!file_stream.eof()) {
@@ -43,7 +43,7 @@ std::string get_shader(const std::string& filename) {
 
 ShaderProgram::ShaderProgram() {
   handle_ = glCreateProgram();
-  ASSERT(handle_ >= 0);
+  WINGS_ASSERT(handle_ >= 0);
 }
 
 void ShaderProgram::set_source(const std::string& dir, const std::string& name,
@@ -66,7 +66,7 @@ void ShaderProgram::set_source(const std::string& dir, const std::string& name,
 }
 
 void ShaderProgram::compile(const std::string& src, int itype) {
-  ASSERT(handle_ >= 0);
+  WINGS_ASSERT(handle_ >= 0);
   GLenum type = itype;
 
   GLuint shader = glCreateShader(type);
@@ -136,11 +136,11 @@ void ShaderProgram::compile(const std::string& vs, const std::string& fs,
       LOG << "GLSL compiler log:\n" << log;
     }
   }
-  ASSERT(status == GL_TRUE) << "failed to link program";
+  WINGS_ASSERT(status == GL_TRUE) << "failed to link program";
 }
 
 void ShaderProgram::use() const {
-  ASSERT(handle_ >= 0);
+  WINGS_ASSERT(handle_ >= 0);
   GL_CALL(glUseProgram(handle_));
 }
 
@@ -211,7 +211,7 @@ void ShaderLibrary::add(const std::string& name, const std::string& prefix,
 }
 
 const ShaderProgram& ShaderLibrary::operator[](const std::string& name) const {
-  ASSERT(shaders_.find(name) != shaders_.end())
+  WINGS_ASSERT(shaders_.find(name) != shaders_.end())
       << "could not find shader " << name;
   return shaders_.at(name);
 }

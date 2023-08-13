@@ -102,4 +102,10 @@ struct Exception {
 #define DBG_ASSERT(X) ASSERT(X)
 #endif
 
+#define WINGS_ASSERT(X)                                                       \
+  if (unlikely(!(X)))                                                         \
+  std::cout << "[" << getpid() << ":" << std::setw(16) << __FILENAME__ << ":" \
+            << std::setw(4) << __LINE__ << "]: "                              \
+            << "assertion " << #X " failed "
+
 }  // namespace wings
