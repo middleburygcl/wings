@@ -17,7 +17,9 @@
 //
 #include "shader.h"
 
+#include "glm.h"
 #include "log.h"
+#include "opengl.h"
 
 namespace wings {
 
@@ -63,8 +65,9 @@ void ShaderProgram::set_source(const std::string& dir, const std::string& name,
   compile(vs, fs, gs, tcs, tes);
 }
 
-void ShaderProgram::compile(const std::string& src, GLenum type) {
+void ShaderProgram::compile(const std::string& src, int itype) {
   ASSERT(handle_ >= 0);
+  GLenum type = itype;
 
   GLuint shader = glCreateShader(type);
 

@@ -23,10 +23,6 @@
 #include <string>
 #include <vector>
 
-#include "glm.h"
-#include "log.h"
-#include "opengl.h"
-
 #ifndef WINGS_SOURCE_DIR
 #define WINGS_SOURCE_DIR "undefined"  // to silence vs-code warning
 #endif
@@ -39,7 +35,7 @@ class ShaderProgram {
   void set_source(const std::string& base, const std::string& name,
                   bool with_geometry, bool with_tessellation,
                   const std::vector<std::string>& macros);
-  void compile(const std::string& src, GLenum type);
+  void compile(const std::string& src, int type);
   void compile(const std::string& vs, const std::string& fs,
                const std::string& gs, const std::string& tcs,
                const std::string& tes);
