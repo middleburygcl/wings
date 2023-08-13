@@ -53,10 +53,7 @@ struct Log {
 
 struct Exception {
   Exception(std::ostream& os, const char* msg) : os_(os), msg_(msg) {}
-  ~Exception() noexcept(false) {
-    os_ << get_backtrace(2);
-    throw std::runtime_error(msg_);
-  }
+  ~Exception() noexcept(false);
 
   static std::string get_backtrace(int start_frame);
 

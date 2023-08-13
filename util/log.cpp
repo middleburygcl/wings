@@ -29,6 +29,11 @@
 
 namespace wings {
 
+Exception::~Exception() noexcept(false) {
+  os_ << get_backtrace(2);
+  throw std::runtime_error(msg_);
+}
+
 std::string Exception::get_backtrace(int start_frame) {
   int i;
   enum { MAX_DEPTH = 50 };
