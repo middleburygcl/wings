@@ -102,7 +102,7 @@ void ShaderProgram::compile(const std::string& src, int itype) {
     }
     // std::cout << "shader source:\n" << source << std::endl;
   }
-  ASSERT(result == GL_TRUE) << "failed to compile shader stage " << type;
+  WINGS_ASSERT(result == GL_TRUE) << "failed to compile shader stage " << type;
 
   // compile succeeded, attach shader to program
   GL_CALL(glAttachShader(handle_, shader));
@@ -116,7 +116,7 @@ void ShaderProgram::compile(const std::string& vs, const std::string& fs,
   compile(fs, GL_FRAGMENT_SHADER);
   if (!gs.empty()) compile(gs, GL_GEOMETRY_SHADER);
   if (!tcs.empty()) {
-    ASSERT(!tes.empty());
+    WINGS_ASSERT(!tes.empty());
     compile(tcs, GL_TESS_CONTROL_SHADER);
     compile(tes, GL_TESS_EVALUATION_SHADER);
   }
