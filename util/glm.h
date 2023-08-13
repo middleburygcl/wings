@@ -22,6 +22,8 @@
 #include <cmath>
 #include <iostream>
 
+namespace wings {
+
 template <size_t N, typename T>
 struct vec : public std::array<T, N> {
   vec() {
@@ -40,7 +42,7 @@ struct vec : public std::array<T, N> {
     for (size_t i = 0; i < n; i++) (*this)[i] = v[i];
   }
   vec<3, T> xyz() const { return {(*this)[0], (*this)[1], (*this)[2]}; }
-};
+};  // namespace std::array
 
 template <size_t N, typename T>
 class mat {
@@ -440,3 +442,5 @@ inline mat4f inverse(const mat4f& m) {
 }
 
 }  // namespace glm
+
+}  // namespace wings
