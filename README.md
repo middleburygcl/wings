@@ -44,7 +44,7 @@ The utilities and sample applications require a few external repositories for IO
 
 4. Connect to the server by opening `wings/apps/xwing/index.html` and you should see an icosahedron. Click and drag the mouse to rotate the mesh!
 
-Alternatively, you can try out the more complete hybrid mesh viewer by running `bin/vwing` and opening `wings/apps/vwing/index.html` (or https://philipclaude.github.io/wings/vwing/).
+Alternatively, you can try out the more complete hybrid mesh viewer by running `bin/vwing [filename]` and opening `wings/apps/vwing/index.html` (or https://philipclaude.github.io/wings/vwing/).
 
 #### **how `wings` works**
 

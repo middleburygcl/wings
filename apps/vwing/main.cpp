@@ -973,6 +973,17 @@ Viewer::~Viewer() {}
 }  // namespace wings
 
 int main(int argc, const char** argv) {
+  if (argc < 2) {
+    std::cout << "usage:\n\tvwing meshfile ws_port" << std::endl;
+    std::cout << "inputs:" << std::endl;
+    std::cout << "[required] meshfile: can be a .meshb or .obj file"
+              << std::endl;
+    std::cout << "[optional] ws_port: port to use for the WebSocket connection "
+                 "(default: 7681)"
+              << std::endl;
+    return 0;
+  }
+
   // int tcp_port = -1;
   int ws_port = 7681;
   if (argc > 2) ws_port = std::atoi(argv[2]);
