@@ -53,8 +53,9 @@ get_color( float u , inout vec3 color, in int alpha ) {
 
 void
 shading( in vec3 l , in vec3 n , in vec3 color , out vec3 color_out ) {
+  //l = normalize(vec3(-1, 1, 1));
 
-  float diffuse = max(0.0,abs(dot(l,n)));
+  float diffuse = max(0.0,(dot(l,n)));
   float phong = 128.0;
   float specular = pow(max(0.0,dot(-reflect(l,n),n)),phong);
 

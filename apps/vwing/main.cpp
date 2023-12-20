@@ -60,8 +60,7 @@ class GLPrimitive {
     write(topology);
   }
 
-  template <typename T>
-  void write(const Topology<T>& topology) {
+  template <typename T> void write(const Topology<T>& topology) {
     if (option_ == JAGGED_TEXTURE) {
       std::vector<GLuint> indices(topology.data().begin(),
                                   topology.data().end());
@@ -91,13 +90,14 @@ class GLPrimitive {
     } else if (option_ == RECTANGULAR_TEXTURE) {
       // get all the group indices of the elements in the topology
       std::set<int> groups;
-      for (int k = 0; k < topology.n(); k++) groups.insert(topology.group(k));
+      for (size_t k = 0; k < topology.n(); k++)
+        groups.insert(topology.group(k));
       std::vector<GLuint> order(topology.n());
       int count = 0;
       int igroup = 0;
       n_draw_group_.resize(groups.size());
       for (int group : groups) {
-        for (int k = 0; k < topology.n(); k++) {
+        for (size_t k = 0; k < topology.n(); k++) {
           if (topology.group(k) != group) continue;
           order[count++] = k;
         }
@@ -149,7 +149,7 @@ class GLPrimitive {
 
     // extract the appropriate rank and buffer the data
     std::vector<GLfloat> u(data->n() * n_basis, 0.0f);
-    for (int k = 0; k < data->n(); k++) {
+    for (size_t k = 0; k < data->n(); k++) {
       for (int j = 0; j < n_basis; j++) {
         u[k * n_basis + j] = (*data)[k][rank * n_basis + j];
       }
@@ -179,7 +179,7 @@ class GLPrimitive {
     // extract the appropriate rank and buffer the data
     std::vector<GLfloat> u(data->n() * n_basis * 2, 0.0f);
     index_t m = 0;
-    for (int k = 0; k < data->n(); k++) {
+    for (size_t k = 0; k < data->n(); k++) {
       for (int j = 0; j < n_basis; j++) {
         u[m++] = (*data)[k][0 * n_basis + j];
         u[m++] = (*data)[k][1 * n_basis + j];
@@ -316,7 +316,7 @@ class MeshScene : public wings::Scene {
     pickables_.clear();
     auto add_pickables = [&](const Vertices& vertices, const auto& topology,
                              const std::string& name) {
-      for (int k = 0; k < topology.n(); k++) {
+      for (size_t k = 0; k < topology.n(); k++) {
         pickables_.emplace_back(vertices, topology, k, name);
       }
     };
@@ -398,7 +398,7 @@ class MeshScene : public wings::Scene {
 
     // write the point data
     std::vector<GLfloat> coordinates(3 * mesh_.vertices().n());
-    for (int i = 0; i < mesh_.vertices().n(); i++)
+    for (size_t i = 0; i < mesh_.vertices().n(); i++)
       for (int d = 0; d < 3; d++) {
         float x = mesh_.vertices()[i][d];
         coordinates[3 * i + d] = x;
@@ -413,7 +413,7 @@ class MeshScene : public wings::Scene {
 
     coordinates.clear();
     n_nodes_ = 0;
-    for (int i = 0; i < mesh_.vertices().n(); i++) {
+    for (size_t i = 0; i < mesh_.vertices().n(); i++) {
       // auto* e = mesh_.vertices().entity(i);
       // if (!e || e->dim() != 0) continue;
       // n_nodes_++;
@@ -515,7 +515,6 @@ class MeshScene : public wings::Scene {
     const float* colormap = nullptr;
     if (name == "giraffe") colormap = colormaps::color_giraffe;
     if (name == "viridis") colormap = colormaps::color_viridis;
-    if (name == "parula") colormap = colormaps::color_parula;
     if (name == "blue-white-red") colormap = colormaps::color_bwr;
     if (name == "blue-green-red") colormap = colormaps::color_bgr;
     if (name == "jet") colormap = colormaps::color_jet;
@@ -878,7 +877,7 @@ class MeshScene : public wings::Scene {
     view.eye = {0, 0, 0};
     view.center = {0, 0, 0};
     vec3f xmin{1e20f, 1e20f, 1e20f}, xmax{-1e20f, -1e20f, -1e20f};
-    for (int i = 0; i < mesh_.vertices().n(); i++) {
+    for (size_t i = 0; i < mesh_.vertices().n(); i++) {
       for (int d = 0; d < 3; d++) {
         float x = mesh_.vertices()(i, d);
         view.center[d] += x;
@@ -974,10 +973,10 @@ Viewer::~Viewer() {}
 }  // namespace wings
 
 int main(int argc, const char** argv) {
-  int tcp_port = -1;
+  // int tcp_port = -1;
   int ws_port = 7681;
   if (argc > 2) ws_port = std::atoi(argv[2]);
-  if (argc > 3) tcp_port = std::atoi(argv[3]);
+  // if (argc > 3) tcp_port = std::atoi(argv[3]);
 
   wings::Mesh mesh(3);
   read_mesh(argv[1], mesh);

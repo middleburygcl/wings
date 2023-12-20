@@ -231,7 +231,7 @@ void Field::evaluate(const Mesh& mesh,
 template <typename T>
 static void set_group(const Topology<T>& topology, ElementField<T>& field) {
   ASSERT(field.n() == topology.n()) << "must initialize field";
-  for (int k = 0; k < field.n(); k++) {
+  for (size_t k = 0; k < field.n(); k++) {
     field[k][0] = topology.group(k);
   }
 }

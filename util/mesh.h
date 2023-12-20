@@ -40,8 +40,7 @@ class TopologyBase : public array2d<index_t> {
     group_.reserve(m);
   }
 
-  template <typename R>
-  void add(const R* x, int m = -1) {
+  template <typename R> void add(const R* x, int m = -1) {
     (m < 0) ? array2d<index_t>::template add<R>(x)
             : array2d<index_t>::template add<R>(x, m);
     group_.push_back(-1);
@@ -61,8 +60,7 @@ class TopologyBase : public array2d<index_t> {
   std::vector<int32_t> group_;
 };
 
-template <typename T>
-class Topology : public TopologyBase {
+template <typename T> class Topology : public TopologyBase {
  public:
   using TopologyBase::length;
   using TopologyBase::n;
@@ -73,15 +71,13 @@ class Topology : public TopologyBase {
   void flip_orientation();
 };
 
-template <>
-class Topology<Polyhedron> : public TopologyBase {
+template <> class Topology<Polyhedron> : public TopologyBase {
  public:
   Topology() : TopologyBase(-1), orientation_(-1) {}
 
   void reserve(int n) { array2d<index_t>::reserve(n); }
 
-  template <typename R, typename S>
-  void add(const R* x, const S* s, int n) {
+  template <typename R, typename S> void add(const R* x, const S* s, int n) {
     TopologyBase::template add<R>(x, n);
     orientation_.add<S>(s, n);
     group_.push_back(-1);
@@ -111,8 +107,7 @@ class Vertices : public array2d<coord_t> {
   int dim() const { return array2d<coord_t>::stride(); }
   void set_dim(int dim) { array2d<coord_t>::set_stride(dim); }
 
-  template <typename R>
-  void add(const R* x, int32_t id = -1) {
+  template <typename R> void add(const R* x, int32_t id = -1) {
     array2d<coord_t>::template add<R>(x);
     group_.push_back(id);
     entity_.push_back(nullptr);
@@ -120,32 +115,32 @@ class Vertices : public array2d<coord_t> {
     param_.add(u);
   }
 
-  int32_t group(index_t k) const {
+  int32_t group(size_t k) const {
     ASSERT(k < n());
     return group_[k];
   }
 
-  void set_group(index_t k, int value) {
+  void set_group(size_t k, int value) {
     ASSERT(k < n());
     group_[k] = value;
   }
 
-  void set_entity(index_t k, Entity* entity) {
+  void set_entity(size_t k, Entity* entity) {
     ASSERT(k < n());
     entity_[k] = entity;
   }
 
-  void set_param(index_t k, const coord_t* u, int nu) {
+  void set_param(size_t k, const coord_t* u, int nu) {
     ASSERT(k < n());
     ASSERT(k < param_.n());
     ASSERT(nu < dim());
     for (int d = 0; d < nu; d++) param_[k][d] = u[d];
   }
 
-  const std::vector<int>& group() const { return group_; }
+  const std::vector<int32_t>& group() const { return group_; }
   std::vector<int32_t>& group() { return group_; }
 
-  Entity* entity(int k) const {
+  Entity* entity(size_t k) const {
     ASSERT(k < n());
     return entity_[k];
   }
@@ -191,11 +186,9 @@ class Mesh {
 
   void get_edges(std::vector<Edge>& edges) const;
 
-  template <typename T>
-  const Topology<T>& get() const;
+  template <typename T> const Topology<T>& get() const;
 
-  template <typename T>
-  Topology<T>& get();
+  template <typename T> Topology<T>& get();
 
   const FieldLibrary& fields() const { return fields_; }
   FieldLibrary& fields() { return fields_; }

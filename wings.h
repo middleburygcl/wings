@@ -198,7 +198,7 @@ class RenderingServer {
   std::unique_ptr<WebsocketRenderer> renderer_;
   std::atomic<bool> listen_;
   std::future<StatusCode> server_;
-  Scene& scene_;
+  // Scene& scene_;
 };
 
 // Utility structure to represent an OpenGL canvas.

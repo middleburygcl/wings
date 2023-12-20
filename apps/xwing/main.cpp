@@ -135,7 +135,7 @@ inline mat4f operator*(const mat4f& A, const mat4f& B) {
 
 namespace glm {
 
-static mat4f lookat(const vec3f& eye, const vec3f& center, const vec3f& up) {
+inline mat4f lookat(const vec3f& eye, const vec3f& center, const vec3f& up) {
   mat4f m;
 
   vec3f g = eye - center;
@@ -162,7 +162,7 @@ static mat4f lookat(const vec3f& eye, const vec3f& center, const vec3f& up) {
   return m;
 }
 
-static mat4f perspective(float fov, float aspect, float n, float f) {
+inline mat4f perspective(float fov, float aspect, float n, float f) {
   mat4f m;
   m.eye();
   float a = 1.0 / tan(fov / 2.0);
@@ -176,7 +176,7 @@ static mat4f perspective(float fov, float aspect, float n, float f) {
   return m;
 }
 
-static mat4f rotation(double X, double Y) {
+inline mat4f rotation(double X, double Y) {
   float X2 = X * X, Y2 = Y * Y;
   float q = 1 + X2 + Y2;
   float s = 1 - X2 - Y2;
@@ -202,7 +202,7 @@ static mat4f rotation(double X, double Y) {
   return R;
 }
 
-static mat4f rotate(const mat4f& a, float angle, const vec3f& axis) {
+inline mat4f rotate(const mat4f& a, float angle, const vec3f& axis) {
   mat4f m;
   float x = axis[0], y = axis[1], z = axis[2];
   float len = 1.0 / length(axis);
@@ -257,7 +257,7 @@ static mat4f rotate(const mat4f& a, float angle, const vec3f& axis) {
   return m;
 }
 
-static mat4f translation(double dx, double dy) {
+inline mat4f translation(double dx, double dy) {
   mat4f T;
   T.eye();
 
@@ -275,7 +275,7 @@ static mat4f translation(double dx, double dy) {
   return T;
 }
 
-static mat4f translate(const mat4f& a, const vec3f& t) {
+inline mat4f translate(const mat4f& a, const vec3f& t) {
   mat4f m;
   for (int i = 0; i < 4; i++)
     for (int j = 0; j < 4; j++) m(i, j) = a(i, j);
@@ -289,7 +289,7 @@ static mat4f translate(const mat4f& a, const vec3f& t) {
 }
 }  // namespace glm
 
-static std::string get_base_dir(const std::string& filepath) {
+inline std::string get_base_dir(const std::string& filepath) {
   if (filepath.find_last_of("/\\") != std::string::npos)
     return filepath.substr(0, filepath.find_last_of("/\\"));
   return "";
