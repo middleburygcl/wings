@@ -57,11 +57,17 @@ int stbi_write_jpg_to_func(stbi_write_func* func, void* context, int x, int y,
 #endif
 
 #if WINGS_COMPILE_STB
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
+
+#pragma GCC diagnostic pop
 #endif
 
 #define GL_GLEXT_PROTOTYPES
@@ -1097,7 +1103,8 @@ StatusCode RenderingServer::start(const std::string& html_file, int port) {
           if (client_fd < 0) return StatusCode::kConnectError;
 
           // send the HTML page to the client
-          write(client_fd, response.c_str(), response.size());
+          ssize_t n_bytes = write(client_fd, response.c_str(), response.size());
+          (void)(n_bytes);
           close(client_fd);
         }
         close(socket_fd);
