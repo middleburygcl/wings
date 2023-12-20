@@ -38,12 +38,10 @@
 #define GL_CALL(X)                                                           \
   {                                                                          \
     (X);                                                                     \
-    GLenum glerr;                                                            \
-    bool error = false;                                                      \
-    glerr = glGetError();                                                    \
-    while (glerr != GL_NO_ERROR) {                                           \
+    GLenum error = glGetError();                                             \
+    if (error != GL_NO_ERROR) {                                              \
       const char* message = "";                                              \
-      switch (glerr) {                                                       \
+      switch (error) {                                                       \
         case GL_INVALID_ENUM:                                                \
           message = "invalid enum";                                          \
           break;                                                             \
@@ -64,10 +62,8 @@
       }                                                                      \
       printf("OpenGL error in file %s at line %d: %s\n", __FILE__, __LINE__, \
              message);                                                       \
-      glerr = glGetError();                                                  \
-      error = true;                                                          \
     }                                                                        \
-    assert(!error);                                                          \
+    assert(error == GL_NO_ERROR);                                            \
   }
 
 struct vec3f : std::array<float, 3> {
@@ -310,6 +306,7 @@ void load_obj(const std::string& filename, std::vector<float>& points,
   bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err,
                               filename.c_str(), base_dir.c_str(), false);
   if (!warn.empty()) std::cout << "WARNING: " << warn << std::endl;
+  if (!err.empty()) std::cout << "ERROR: " << err << std::endl;
   assert(err.empty());
   assert(ret);
 
