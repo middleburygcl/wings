@@ -303,13 +303,13 @@ void write_polygons(int64_t fid, const Mesh& mesh) {
   index_t n_boundary = mesh.polygons().n();
   GmfSetKwd(fid, GmfBoundaryPolygonHeaders, n_boundary);
   index_t m = 1;
-  for (int k = 0; k < mesh.polygons().n(); k++) {
+  for (size_t k = 0; k < mesh.polygons().n(); k++) {
     GmfSetLin(fid, GmfBoundaryPolygonHeaders, m, mesh.polygons().group(k));
     m += mesh.polygons().length(k);
   }
 
   GmfSetKwd(fid, GmfBoundaryPolygonVertices, m - 1);
-  for (int k = 0; k < mesh.polygons().n(); k++) {
+  for (size_t k = 0; k < mesh.polygons().n(); k++) {
     for (int j = 0; j < mesh.polygons().length(k); j++)
       GmfSetLin(fid, GmfBoundaryPolygonVertices, mesh.polygons()(k, j) + 1);
   }
@@ -321,14 +321,14 @@ void write_polyhedra(int64_t fid, const Mesh& mesh) {
   index_t n_interior = mesh.polyhedra().faces().n();
   GmfSetKwd(fid, GmfInnerPolygonHeaders, n_interior);
   index_t m = 1;
-  for (int k = 0; k < mesh.polyhedra().faces().n(); k++) {
+  for (size_t k = 0; k < mesh.polyhedra().faces().n(); k++) {
     GmfSetLin(fid, GmfInnerPolygonHeaders, m,
               mesh.polyhedra().faces().group(k));
     m += mesh.polyhedra().faces().length(k);
   }
 
   GmfSetKwd(fid, GmfInnerPolygonVertices, m - 1);
-  for (int k = 0; k < mesh.polyhedra().faces().n(); k++) {
+  for (size_t k = 0; k < mesh.polyhedra().faces().n(); k++) {
     for (int j = 0; j < mesh.polyhedra().faces().length(k); j++)
       GmfSetLin(fid, GmfInnerPolygonVertices,
                 mesh.polyhedra().faces()(k, j) + 1);
@@ -336,13 +336,13 @@ void write_polyhedra(int64_t fid, const Mesh& mesh) {
 
   GmfSetKwd(fid, GmfPolyhedraHeaders, mesh.polyhedra().n());
   m = 1;
-  for (int k = 0; k < mesh.polyhedra().n(); k++) {
+  for (size_t k = 0; k < mesh.polyhedra().n(); k++) {
     GmfSetLin(fid, GmfPolyhedraHeaders, m, mesh.polyhedra().group(k) + 1);
     m += mesh.polyhedra().length(k);
   }
 
   GmfSetKwd(fid, GmfPolyhedraFaces, m - 1);
-  for (int k = 0; k < mesh.polyhedra().n(); k++) {
+  for (size_t k = 0; k < mesh.polyhedra().n(); k++) {
     for (int j = 0; j < mesh.polyhedra().length(k); j++) {
       int s = mesh.polyhedra().orientation()(k, j);
       index_t f = mesh.polyhedra()(k, j) + 1;
@@ -358,7 +358,7 @@ void write_prisms(int64_t fid, const Mesh& mesh) {
   GmfSetKwd(fid, GmfPrisms, n);
 
   int indices[7];
-  for (int k = 0; k < mesh.prisms().n(); k++) {
+  for (size_t k = 0; k < mesh.prisms().n(); k++) {
     for (int j = 0; j < 6; j++) indices[j] = mesh.prisms()(k, j) + 1;
     indices[6] = mesh.prisms().group(k) + 1;
     GmfSetLin(fid, GmfPrisms, indices[0], indices[1], indices[2], indices[3],
@@ -432,7 +432,7 @@ void write(const Mesh& mesh, const std::string& filename, bool twod) {
   ASSERT(fid);
 
   GmfSetKwd(fid, GmfVertices, mesh.vertices().n());
-  for (int k = 0; k < mesh.vertices().n(); k++) {
+  for (size_t k = 0; k < mesh.vertices().n(); k++) {
     int ref = mesh.vertices().group(k) + 1;
     if (dim == 2)
       GmfSetLin(fid, GmfVertices, mesh.vertices()[k][0], mesh.vertices()[k][1],
@@ -478,7 +478,7 @@ void read(const std::string& filename, Mesh& mesh) {
   std::string warn;
   std::string err;
   bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err,
-                              filename.c_str(), base_dir.c_str(), false);
+                              filename.c_str(), base_dir.c_str(), true);
   if (!warn.empty()) {
     std::cout << "WARN: " << warn << std::endl;
   }
@@ -585,14 +585,14 @@ void write(const Mesh& mesh, const std::string& filename) {
   fprintf(out, "# obj mesh from avro\n");
 
   // write vertices
-  for (int k = 0; k < mesh.vertices().n(); k++) {
+  for (size_t k = 0; k < mesh.vertices().n(); k++) {
     const auto* p = mesh.vertices()[k];
     double z = (mesh.vertices().dim() == 2) ? 0.0 : p[2];
     fprintf(out, "v %.10f %.10f %.10f\n", p[0], p[1], z);
   }
 
   // write triangles
-  for (int k = 0; k < mesh.triangles().n(); k++) {
+  for (size_t k = 0; k < mesh.triangles().n(); k++) {
     fprintf(out, "f ");
     for (int j = 0; j < 3; j++) {
       int idx = mesh.triangles()[k][j];
@@ -602,7 +602,7 @@ void write(const Mesh& mesh, const std::string& filename) {
   }
 
   // write quads
-  for (int k = 0; k < mesh.quads().n(); k++) {
+  for (size_t k = 0; k < mesh.quads().n(); k++) {
     fprintf(out, "f ");
     for (int j = 0; j < 4; j++) {
       int idx = mesh.quads()[k][j];

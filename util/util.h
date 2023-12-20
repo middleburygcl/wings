@@ -17,6 +17,7 @@
 //
 #pragma once
 
+#include <memory>
 #include <vector>
 
 #include "glm.h"
@@ -24,8 +25,7 @@
 namespace wings {
 
 class Vertices;
-template <typename T>
-class Topology;
+template <typename T> class Topology;
 class ShaderProgram;
 
 struct AABB {

@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 3.1)
 project(wings LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_FLAGS "-O3 -fPIC")
-set(CMAKE_C_FLAGS "-O3 -fPIC")
+set(CMAKE_CXX_FLAGS "-O3 -fPIC -Wall")
+set(CMAKE_C_FLAGS "-O3 -fPIC -Wall")
 #set(CMAKE_CXX_FLAGS "-O0 -fsanitize=address")
 
 # setup binary and lib directories

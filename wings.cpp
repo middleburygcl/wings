@@ -85,12 +85,10 @@ int stbi_write_jpg_to_func(stbi_write_func* func, void* context, int x, int y,
 #define GL_CALL(X)                                                           \
   {                                                                          \
     (X);                                                                     \
-    GLenum glerr;                                                            \
-    bool error = false;                                                      \
-    glerr = glGetError();                                                    \
-    while (glerr != GL_NO_ERROR) {                                           \
+    GLenum error = glGetError();                                             \
+    if (error != GL_NO_ERROR) {                                              \
       const char* message = "";                                              \
-      switch (glerr) {                                                       \
+      switch (error) {                                                       \
         case GL_INVALID_ENUM:                                                \
           message = "invalid enum";                                          \
           break;                                                             \
@@ -111,10 +109,8 @@ int stbi_write_jpg_to_func(stbi_write_func* func, void* context, int x, int y,
       }                                                                      \
       printf("OpenGL error in file %s at line %d: %s\n", __FILE__, __LINE__, \
              message);                                                       \
-      glerr = glGetError();                                                  \
-      error = true;                                                          \
     }                                                                        \
-    assert(!error);                                                          \
+    assert(error == GL_NO_ERROR);                                            \
   }
 
 namespace sha1 {
@@ -413,7 +409,6 @@ void encode(const char* input, size_t n_input, std::string& output) {
   size_t n = 0, n_output = 0;
   while (n < n_input) {
     int n_block = 0;
-#pragma unroll
     for (int k = 0; k < 3; k++) {
       if (n < n_input) {
         x[k] = (unsigned char)input[n++];
@@ -424,7 +419,6 @@ void encode(const char* input, size_t n_input, std::string& output) {
     }
     if (n_block > 0) {
       encodeblock(x.data(), y.data(), n_block);
-#pragma unroll
       for (int k = 0; k < 4; k++) {
         output[n_output++] = y[k];
       }
@@ -477,7 +471,6 @@ static std::map<EGLint, std::string> egl_error_string = {
 int shakehands(int client_fd, const std::string& request) {
   // GUID defined by RFC6455
   const std::string guid(RFC6455_GUID);
-  int out_len;
 
   // look for the 'Sec-WebSocket-Key' string
   std::string lookfor = "Sec-WebSocket-Key:";
@@ -520,7 +513,7 @@ uint64_t ntohll(uint64_t x) {
 }
 #endif
 
-StatusCode parseframe(const std::string& frame, int n_bytes,
+StatusCode parseframe(const std::string& frame, size_t n_bytes,
                       std::string& message) {
   // I found this website helpful:
   // https://www.openmymind.net/WebSocket-Framing-Masking-Fragmentation-and-More/
@@ -801,7 +794,7 @@ std::unique_ptr<RenderingContext> RenderingContext::create(
 class WebsocketClient {
  public:
   WebsocketClient(Scene& scene, int fd, int idx)
-      : fd_(fd), idx_(idx), scene_(scene) {
+      : scene_(scene), fd_(fd), idx_(idx) {
     // launch the thread that listens and responds to client messages
     listener_ = std::async(std::launch::async, [this]() { return listen(); });
   }
@@ -1051,7 +1044,7 @@ class WebsocketRenderer {
   int port_{-1};
 };
 
-RenderingServer::RenderingServer(Scene& scene, int port) : scene_(scene) {
+RenderingServer::RenderingServer(Scene& scene, int port) {
   renderer_ = std::make_unique<WebsocketRenderer>(scene, port);
   renderer_->start();
 }
@@ -1104,7 +1097,7 @@ StatusCode RenderingServer::start(const std::string& html_file, int port) {
           if (client_fd < 0) return StatusCode::kConnectError;
 
           // send the HTML page to the client
-          auto n_bytes = write(client_fd, response.c_str(), response.size());
+          write(client_fd, response.c_str(), response.size());
           close(client_fd);
         }
         close(socket_fd);

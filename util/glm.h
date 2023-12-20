@@ -24,8 +24,7 @@
 
 namespace wings {
 
-template <size_t N, typename T>
-struct vec : public std::array<T, N> {
+template <size_t N, typename T> struct vec : public std::array<T, N> {
   vec() {
     for (size_t i = 0; i < N; i++) (*this)[i] = 0;
   }
@@ -44,8 +43,7 @@ struct vec : public std::array<T, N> {
   vec<3, T> xyz() const { return {(*this)[0], (*this)[1], (*this)[2]}; }
 };  // namespace std::array
 
-template <size_t N, typename T>
-class mat {
+template <size_t N, typename T> class mat {
  public:
   static constexpr size_t n_elem = N * N;
   mat() { zero(); }
@@ -62,19 +60,16 @@ class mat {
   T data_[N * N];
 };
 
-template <typename T>
-inline T length(const vec<3, T>& u) {
+template <typename T> inline T length(const vec<3, T>& u) {
   return std::sqrt(u[0] * u[0] + u[1] * u[1] + u[2] * u[2]);
 }
 
-template <typename T>
-inline vec<3, T> unit_vector(const vec<3, T>& u) {
+template <typename T> inline vec<3, T> unit_vector(const vec<3, T>& u) {
   T l = length(u);
   return {u[0] / l, u[1] / l, u[2] / l};
 }
 
-template <typename T>
-inline T dot(const vec<3, T>& u, const vec<3, T>& v) {
+template <typename T> inline T dot(const vec<3, T>& u, const vec<3, T>& v) {
   return u[0] * v[0] + u[1] * v[1] + u[2] * v[2];
 }
 
@@ -145,9 +140,9 @@ inline mat<N, T> operator*(const mat<N, T>& a, const mat<N, T>& b) {
 template <size_t N, typename T>
 inline vec<N, T> operator*(const mat<N, T>& a, const vec<N, T>& x) {
   vec<N, T> b;
-  for (int i = 0; i < N; i++) {
+  for (size_t i = 0; i < N; i++) {
     b[i] = 0;
-    for (int j = 0; j < N; j++) {
+    for (size_t j = 0; j < N; j++) {
       b[i] += a(i, j) * x[j];
     }
   }

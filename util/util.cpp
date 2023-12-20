@@ -154,7 +154,7 @@ void PickableObject::save_points(const Vertices& vertices,
   int dim = (vertices.dim() >= 3) ? 3 : vertices.dim();
   points.resize(topology.length(k));
   nodes.resize(points.size());
-  for (uint64_t j = 0; j < topology.length(k); j++) {
+  for (int j = 0; j < topology.length(k); j++) {
     nodes[j] = topology[k][j];
     for (int d = 0; d < dim; d++) points[j][d] = vertices[nodes[j]][d];
     for (int d = dim; d < 3; d++) points[j][d] = 0.0;  // in case the mesh is 2d

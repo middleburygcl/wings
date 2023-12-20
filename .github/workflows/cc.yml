@@ -1,0 +1,43 @@
+name: c++-checks
+
+on:
+  pull_request:
+    branches: main
+  push:
+    branches: main
+
+env:
+  # (Release, Debug, RelWithDebInfo, etc.)
+  BUILD_TYPE: RelWithDebInfo
+
+jobs:
+  cc-build-format-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: install
+      run: |
+        sudo apt-get update -qq
+        sudo apt-get install -y --no-install-recommends libgl1-mesa-dev
+
+    - name: configure
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} .
+
+    - name: build
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+
+    - name: format
+      uses: cpp-linter/cpp-linter-action@v2
+      id: linter
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        style: file
+
+    - name: check failure
+      if: steps.linter.outputs.checks-failed > 0
+      run: |
+        echo "Some files failed the linting checks!"
+        #exit 1
