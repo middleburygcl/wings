@@ -308,7 +308,7 @@ void load_obj(const std::string& filename, std::vector<float>& points,
   if (!warn.empty()) std::cout << "WARNING: " << warn << std::endl;
   if (!err.empty()) std::cout << "ERROR: " << err << std::endl;
   assert(err.empty());
-  assert(ret);
+  if (!ret) exit(1);
 
   points.reserve(attrib.vertices.size());
   for (size_t v = 0; v < attrib.vertices.size(); v++)

@@ -1103,7 +1103,7 @@ StatusCode RenderingServer::start(const std::string& html_file, int port) {
           if (client_fd < 0) return StatusCode::kConnectError;
 
           // send the HTML page to the client
-          write(client_fd, response.c_str(), response.size());
+          (void)write(client_fd, response.c_str(), response.size());
           close(client_fd);
         }
         close(socket_fd);
