@@ -85,12 +85,10 @@ int stbi_write_jpg_to_func(stbi_write_func* func, void* context, int x, int y,
 #define GL_CALL(X)                                                           \
   {                                                                          \
     (X);                                                                     \
-    GLenum glerr;                                                            \
-    bool error = false;                                                      \
-    glerr = glGetError();                                                    \
-    while (glerr != GL_NO_ERROR) {                                           \
+    GLenum error = glGetError();                                             \
+    if (error != GL_NO_ERROR) {                                              \
       const char* message = "";                                              \
-      switch (glerr) {                                                       \
+      switch (error) {                                                       \
         case GL_INVALID_ENUM:                                                \
           message = "invalid enum";                                          \
           break;                                                             \
@@ -111,10 +109,8 @@ int stbi_write_jpg_to_func(stbi_write_func* func, void* context, int x, int y,
       }                                                                      \
       printf("OpenGL error in file %s at line %d: %s\n", __FILE__, __LINE__, \
              message);                                                       \
-      glerr = glGetError();                                                  \
-      error = true;                                                          \
     }                                                                        \
-    assert(!error);                                                          \
+    assert(error == GL_NO_ERROR);                                            \
   }
 
 namespace sha1 {
