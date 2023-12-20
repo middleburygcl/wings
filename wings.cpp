@@ -57,11 +57,17 @@ int stbi_write_jpg_to_func(stbi_write_func* func, void* context, int x, int y,
 #endif
 
 #if WINGS_COMPILE_STB
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
+
+#pragma GCC diagnostic pop
 #endif
 
 #define GL_GLEXT_PROTOTYPES

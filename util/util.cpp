@@ -209,7 +209,6 @@ PickableObject::PickableObject(const Vertices& vertices,
   triangles.reserve(100);
   for (int j = 0; j < n_faces; j++) {
     uint64_t f = topology[k][j];
-    ASSERT(f >= 0);
     int n_vertices = faces.length(f);
     for (int i = 0; i < n_vertices; i++) {
       uint64_t p = faces[f][i];
