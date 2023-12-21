@@ -454,9 +454,8 @@ static std::map<EGLint, std::string> egl_error_string = {
     {EGL_BAD_NATIVE_WINDOW, "bad native window"},
     {EGL_CONTEXT_LOST, "context lost"}};
 
-#define EGL_CALL(X)                                                       \
+#define EGL_CHECK()                                                       \
   {                                                                       \
-    (X);                                                                  \
     EGLint error = eglGetError();                                         \
     if (error != EGL_SUCCESS)                                             \
       printf("EGL error in file %s at line %d: %s\n", __FILE__, __LINE__, \
@@ -464,7 +463,12 @@ static std::map<EGLint, std::string> egl_error_string = {
     assert(error == EGL_SUCCESS);                                         \
   }
 
-#define EGL_CHECK(X) EGL_CALL({})
+#define EGL_CALL(X) \
+  {                 \
+    (X);            \
+    EGL_CHECK();    \
+  }
+
 #endif
 
 // opcodes and GUID defined by RFC6455
