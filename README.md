@@ -1,4 +1,4 @@
-### **about**
+### **About**
 
 `wings` is a web interface for graphics applications. It is primarily intended for server-side rendering of meshes and solution fields for scientific applications, in which a mesh might be stored on a remote cluster or a cloud virtual machine (e.g. using GCP or AWS).
 
@@ -10,7 +10,7 @@ When running `wings` applications on a remote server, remember to forward the po
 
 Please see the GitHub Issues tab for a list of active projects and known bugs/limitations.
 
-### **core dependencies**
+### **Core dependencies**
 
 - `git`,
 - `CMake` (>= 3.1)
@@ -18,7 +18,7 @@ Please see the GitHub Issues tab for a list of active projects and known bugs/li
 - `OpenGL` (with `EGL` on Linux and `CoreGL` on OS X - these should be installed alongside `OpenGL`),
 - `stb` for writing JPEG images before encoding them and sending them to a client (this can be omitted if you are already using `stb` in your project - otherwise it will be downloaded automatically).
 
-### **optional dependencies (to run the sample applications)**
+### **Optional dependencies (to run the sample applications)**
 
 The utilities and sample applications require a few external repositories for IO. If the examples are being built, the `wings` configuration will automatically download, build and link to them. They will be located in the `third_party` directory and can be deleted with `make clean_extern`.
 
@@ -26,7 +26,7 @@ The utilities and sample applications require a few external repositories for IO
 - `tinyobjloader`: https://github.com/tinyobjloader/tinyobjloader
 - `libMeshb`: https://github.com/LoicMarechal/libMeshb
 
-#### **quickstart**
+#### **Quickstart**
 
 1. Clone the repository:
 
@@ -46,7 +46,7 @@ The utilities and sample applications require a few external repositories for IO
 
 Alternatively, you can try out the more complete hybrid mesh viewer by running `bin/vwing` and opening `wings/apps/vwing/index.html` (or https://middpolymer.github.io/wings/vwing/).
 
-#### **how `wings` works**
+#### **How `wings` works**
 
 `wings` communicates asynchronously between the client and server using a WebSocket connection (following RFC 6455). Each client connection spawns a new listener thread in the server which will listen for rendering requests. These requests are encoded by the client (sent as a string), and wings will decipher them as a specific event. The first character typically encodes the type of event (`K`: key-value, `M` is a mouse-motion event, `W` is a mouse-wheel event):
 
@@ -60,7 +60,7 @@ Please note that `wings` was specifically designed in this way to reduce latency
 
 It would also be possible to encode the client messages using JSON or protocol buffers, but that adds a dependency (and I tend to avoid using dependencies unless absolutely necessary).
 
-#### **using the `wings` API**
+#### **Using the `wings` API**
 
 The core `wings` functionality is provided as a single-header, single-source library (`wings.h` and `wings.cpp`). The `CMake` configuration will build the `wings` library, however, you can also directly compile `wings.cpp` while setting the include path to contain the `wings` repository.
 
@@ -76,11 +76,11 @@ You can then create a `RenderingServer` which accepts a derived `Scene` object a
 
 On the client side, you need to (1) create a `img` HTML element and (2) create a WebSocket connection handler. The `src` attribute of the `img` element can be assigned to the event data when the WebSocket handler receives a message from the server (the `onmessage` callback). You can then send messages to your specialized `Scene` using the `send` function of your WebSocket connection (using the message conventions described above). I recommend inspecting the `apps/xwing` source for a complete example.
 
-#### **reminders**
+#### **Reminders**
 
 Note that `OpenGL` contexts can share resources such as buffers and textures but **cannot** share containers, such as vertex array objects or framebuffer objects (holding the render buffer and depth buffer). A `glCanvas` utility structure is provided to store and handle these, which should be created for each client connection (i.e. in each `onconnect` callback).
 
-### **sample applications**
+### **Sample applications**
 
 #### **`xwing`**: example wing viewer
 
@@ -90,7 +90,7 @@ This is a minimal, self-contained example that includes everything needed to set
 
 This is a more complete program for rendering mixed-element meshes consisting of lines, triangles, quads, polygons, tetrahedra, prisms, pyramids and polyhedra. `vwing` also sets up a few default "fields" (attributes) corresponding to the element group number (or reference) or the cell id. You can cycle through the available fields by pressing the `f` key. `vwing` supports clipping planes as well as element "picking" and prints a message in the browser with the picked element information. After picking an element, you can press `c` to center the view on the picked element.
 
-#### **LICENSE**
+#### **License**
 
 All `wings` source code (`wings.h`, `wings.cpp` as well as all `C++`, `HTML`, `JavaScript` and `GLSL` code for the apps) is distributed under the Apache-2.0 License.
 

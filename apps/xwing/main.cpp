@@ -455,10 +455,8 @@ class MeshScene : public Scene {
 
  private:
   const Mesh& mesh_;
-  float user_x{0}, user_y{0};
 
   int program;
-  GLuint vertex_array;
   GLuint point_buffer;
   GLuint triangle_buffer;
   GLuint edge_buffer;
@@ -565,6 +563,7 @@ void MeshScene::onconnect() {
 
 bool MeshScene::render(const ClientInput& input, int client_idx,
                        std::string* msg) {
+  (void)(msg);  // ignore unused-but-set-parameter warning
   ClientView& view = view_[client_idx];
   msg = nullptr;
   bool updated = false;

@@ -21,6 +21,8 @@
 
 namespace wings {
 
+#define UNUSED(X) (void)(X)
+
 template <typename T>
 static void allocate(const Topology<T>& topology, ElementField<T>& field) {
   ASSERT(field.n() == 0);
@@ -53,6 +55,8 @@ template <typename T>
 void evaluate_basis(int order, const coord_t* x, coord_t* phi);
 template <typename T>
 void polytope_correction(index_t n, std::vector<coord_t>& phi) {
+  UNUSED(n);
+  UNUSED(phi);
   return;
 }
 
@@ -69,6 +73,7 @@ void polytope_correction<Polyhedron>(index_t n, std::vector<coord_t>& phi) {
 
 template <>
 void polytope_correction<Prism>(index_t n, std::vector<coord_t>& phi) {
+  UNUSED(n);
   phi.resize(6, 1.0 / 6.0);
 }
 
@@ -123,6 +128,7 @@ void evaluate_basis<Tet>(int order, const coord_t* x, coord_t* phi) {
 
 template <>
 void evaluate_basis<Polygon>(int order, const coord_t* x, coord_t* phi) {
+  UNUSED(x);
   if (order == 0)
     phi[0] = 1.0;
   else if (order == 1)
@@ -133,6 +139,7 @@ void evaluate_basis<Polygon>(int order, const coord_t* x, coord_t* phi) {
 
 template <>
 void evaluate_basis<Prism>(int order, const coord_t* x, coord_t* phi) {
+  UNUSED(x);
   if (order == 0)
     phi[0] = 1.0;
   else if (order == 1)
@@ -143,6 +150,7 @@ void evaluate_basis<Prism>(int order, const coord_t* x, coord_t* phi) {
 
 template <>
 void evaluate_basis<Pyramid>(int order, const coord_t* x, coord_t* phi) {
+  UNUSED(x);
   if (order == 0)
     phi[0] = 1.0;
   else if (order == 1)
@@ -153,6 +161,7 @@ void evaluate_basis<Pyramid>(int order, const coord_t* x, coord_t* phi) {
 
 template <>
 void evaluate_basis<Polyhedron>(int order, const coord_t* x, coord_t* phi) {
+  UNUSED(x);
   if (order == 0)
     phi[0] = 1.0;
   else if (order == 1)
@@ -209,6 +218,8 @@ static void evaluate_polyhedra(
     std::function<void(const coord_t* x, coord_t*)> f) {
   ASSERT(field.order() == 0);
   ASSERT(topology.n() == field.n());
+  UNUSED(vertices);
+  UNUSED(f);
   LOG << "[warning] not evaluating field on polyhedra";
   return;
 }
@@ -239,6 +250,7 @@ static void set_group(const Topology<T>& topology, ElementField<T>& field) {
 void FieldLibrary::set_defaults(const Mesh& mesh) {
   add("cell", 1, 0);
   auto f1 = [](const coord_t* x, coord_t* y) {
+    UNUSED(x);
     y[0] = double(rand()) / double(RAND_MAX);
   };
   fields_["cell"].evaluate(mesh, f1);
@@ -256,5 +268,7 @@ void FieldLibrary::set_defaults(const Mesh& mesh) {
   set_group(mesh.polyhedra(), field.polyhedra());
   set_group(mesh.polyhedra().faces(), field.polyhedra().faces());
 }
+
+#undef UNUSED
 
 }  // namespace wings
