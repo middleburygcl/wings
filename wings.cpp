@@ -780,6 +780,10 @@ void glRenderingContext::resize_canvas(int width, int height) {
                               static_cast<int>(height), EGL_NONE};
   surface = eglCreatePbufferSurface(display, config, surface_attribs);
   EGL_CHECK();
+#else
+  // ignore unused parameter warnings
+  (void)(width);
+  (void)(height);
 #endif
 }
 

@@ -565,6 +565,7 @@ void MeshScene::onconnect() {
 
 bool MeshScene::render(const ClientInput& input, int client_idx,
                        std::string* msg) {
+  (void)(msg);  // ignore unused-but-set-parameter warning
   ClientView& view = view_[client_idx];
   msg = nullptr;
   bool updated = false;

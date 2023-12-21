@@ -225,7 +225,7 @@ template <typename T, typename F = uint64_t> class array2d {
     } else {
       first_.reserve(n);
       length_.reserve(n);
-      data_.reserve(10 * n);
+      data_.reserve(max_item * n);
     }
   }
 
