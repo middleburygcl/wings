@@ -151,6 +151,11 @@
           <label class='form-check-label' for='checkbox-triangles'>triangles</label>
         </div>
         <div class='form-check' style='display:inline-block'>
+          <input class='form-check-input' id='checkbox-quads' type='checkbox' checked
+            onchange='togglePrimitive("checkbox-quads", "q");'></input>
+          <label class='form-check-label' for='checkbox-quads'>quads</label>
+        </div>
+        <div class='form-check' style='display:inline-block'>
           <input class='form-check-input' id='checkbox-tetrahedra' type='checkbox'
             onchange='togglePrimitive("checkbox-tetrahedra", "T");'></input>
           <label class='form-check-label' for='checkbox-tetrahedra'>tetrahedra</label>
@@ -347,7 +352,7 @@
     ws.send(msg);
   });
 
-  img.addEventListener('mousewheel', function (e) {
+  img.addEventListener('wheel', function (e) {
     e.preventDefault();
     if (!scrolling) { // initial scroll event
       quality0 = document.getElementById('qualitys').value;

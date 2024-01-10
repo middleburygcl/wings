@@ -60,7 +60,8 @@ class GLPrimitive {
     write(topology);
   }
 
-  template <typename T> void write(const Topology<T>& topology) {
+  template <typename T>
+  void write(const Topology<T>& topology) {
     if (option_ == JAGGED_TEXTURE) {
       std::vector<GLuint> indices(topology.data().begin(),
                                   topology.data().end());
@@ -624,6 +625,8 @@ class MeshScene : public wings::Scene {
           view.active["Lines"] = input.ivalue > 0;
         else if (input.key == 't')
           view.active["Triangles"] = input.ivalue > 0;
+        else if (input.key == 'q')
+          view.active["Quads"] = input.ivalue > 0;
         else if (input.key == 'T')
           view.active["Tetrahedra"] = input.ivalue > 0;
         else if (input.key == 'p')
