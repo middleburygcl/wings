@@ -48,6 +48,7 @@ extern "C" {
 #endif
 
 typedef void stbi_write_func(void* context, void* data, int size);
+void stbi_flip_vertically_on_write(int flag);
 
 int stbi_write_jpg_to_func(stbi_write_func* func, void* context, int x, int y,
                            int comp, const void* data, int quality);
@@ -894,6 +895,7 @@ class WebsocketClient {
             // std::cout << "w = " << scene_.width() << " h = " <<
             // scene_.height()
             //           << std::endl;
+            stbi_flip_vertically_on_write(1);
             stbi_write_jpg_to_func(custom_stbi_write_mem, this, scene_.width(),
                                    scene_.height(), scene_.channels(),
                                    scene_.pixels().data(), scene_.quality());
