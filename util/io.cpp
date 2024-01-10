@@ -478,7 +478,7 @@ void read(const std::string& filename, Mesh& mesh) {
   std::string warn;
   std::string err;
   bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err,
-                              filename.c_str(), base_dir.c_str(), true);
+                              filename.c_str(), base_dir.c_str(), false);
   if (!warn.empty()) {
     std::cout << "WARN: " << warn << std::endl;
   }
