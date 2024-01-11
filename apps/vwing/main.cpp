@@ -581,7 +581,7 @@ class MeshScene : public wings::Scene {
             view.model_matrix = R * view.model_matrix;
           } else {
             double dx = -(view.x - input.x) / view.canvas.width;
-            double dy = -(view.y - input.y) / view.canvas.height;
+            double dy = (view.y - input.y) / view.canvas.height;
             dx *= view.size;
             dy *= view.size;
             mat4f T = glm::translation(dx, dy);
