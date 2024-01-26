@@ -83,7 +83,7 @@
           class="btn btn-primary"
           style="
             width: 100%;
-            height: 50px;
+            height: 40px;
             background-color: black;
             color: white;
             border-color: black;
@@ -101,7 +101,7 @@
             <button
               class="float-right btn btn-primary"
               id="button-save-png"
-              onclick="saveImage()"
+              onclick="alert('not implemented!')"
             >
               export
             </button>
@@ -323,9 +323,10 @@
           <div class="form-check" style="display: inline-block">
             <input
               class="form-check-input"
-              id="checkbox-lighting"
+              id="checkbox-vertex-numbers"
               type="checkbox"
-              onchange='alert("not implement yet!")'
+              onchange="toggleNumbers()"
+              checked
             />
             <label class="form-check-label" for="checkbox-numbers"
               >numbers</label
@@ -579,6 +580,11 @@
       img.setAttribute("height", h);
       ws.send("KIH" + h);
       setQuality(); // request an image update
+    };
+
+    const toggleNumbers = () => {
+      const checkbox = document.getElementById("checkbox-vertex-numbers");
+      ws.send("KI#" + (checkbox.checked ? 1 : 0));
     };
 
     window.onload = () => {

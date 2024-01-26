@@ -87,6 +87,7 @@ if (${WINGS_BUILD_UTIL})
 	util/log.cpp
 	util/mesh.cpp
 	util/shader.cpp
+	util/texture.cpp
 	util/util.cpp)
 
 	# create an object library for all the sources
