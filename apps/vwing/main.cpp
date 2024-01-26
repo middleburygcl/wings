@@ -300,6 +300,8 @@ class MeshScene : public wings::Scene {
     int field_mode{0};
     int field_index{0};
     glCanvas canvas{800, 600};
+    float near{1e-3};
+    float far{1000};
   };
 
  public:
@@ -643,16 +645,23 @@ class MeshScene : public wings::Scene {
           view.show_wireframe = input.ivalue > 0;
         else if (input.key == 'W') {
           int w = input.ivalue;
-          int h = 0.75 * w;
-          view.canvas.resize(w, h);
-          view.projection_matrix =
-              glm::perspective(45.0, float(w) / float(h), 0.1f, 10000.0f);
-          // save the width and height for the scene to write the image
+          view.canvas.resize(w, view.canvas.height);
+          view.projection_matrix = wings::glm::perspective(
+              view.fov, float(w) / float(view.canvas.height), view.near,
+              view.far);
+          // save the width for the scene to write the image
+          view.canvas.width = w;
           width_ = w;
+        } else if (input.key == 'H') {
+          int h = input.ivalue;
+          view.canvas.resize(view.canvas.width, h);
+          view.projection_matrix = wings::glm::perspective(
+              view.fov, float(view.canvas.width) / float(h), view.near,
+              view.far);
+          // save the height for the scene to write the image
+          view.canvas.height = h;
           height_ = h;
-          // the wings rendering context is currently in the render section.
-          // there should be another image request after the size is updated
-          updated = false;
+          // updated = false;
         } else {
           updated = false;
         }
@@ -908,8 +917,8 @@ class MeshScene : public wings::Scene {
     vec3f up{0, 1, 0};
     view.view_matrix = glm::lookat(view.eye, view.center, up);
     view.projection_matrix = glm::perspective(
-        view.fov, float(view.canvas.width) / float(view.canvas.height), 0.1f,
-        10000.0f);
+        view.fov, float(view.canvas.width) / float(view.canvas.height),
+        view.near, view.far);
     view.translation_matrix.eye();
 
     // vertex arrays are not shared between OpenGL contexts in different threads
