@@ -55,9 +55,9 @@ void
 shading( in vec3 l , in vec3 n , in vec3 color , out vec3 color_out ) {
   //l = normalize(vec3(-1, 1, 1));
 
-  float diffuse = max(0.0,(dot(l,n)));
+  float diffuse = abs(dot(l,n));
   float phong = 128.0;
-  float specular = pow(max(0.0,dot(-reflect(l,n),n)),phong);
+  float specular = pow(abs(dot(-reflect(l,n),n)),phong);
 
   vec3 cd = color * diffuse;
   vec3 cs = vec3(0.1) * specular;
