@@ -26,6 +26,7 @@
 #include "mesh.h"
 #include "opengl.h"
 #include "shader.h"
+#include "texture.h"
 #include "util.h"
 
 namespace wings {
@@ -45,7 +46,9 @@ enum TextureIndex {
   FIRST_TEXTURE = 5,
   LENGTH_TEXTURE = 6,
   FIELD_TEXTURE = 7,
-  IMAGE_TEXTURE = 8
+  IMAGE_TEXTURE = 8,
+  FONT_TEXTURE = 9,
+  POINT_VISIBILITY = 10
 };
 
 class GLPrimitive {
@@ -300,6 +303,9 @@ class MeshScene : public wings::Scene {
     int field_mode{0};
     int field_index{0};
     glCanvas canvas{800, 600};
+    float near{1e-3};
+    float far{1000};
+    bool numbers{true};
   };
 
  public:
@@ -385,6 +391,20 @@ class MeshScene : public wings::Scene {
     return picked;
   }
 
+  void write_point_visibility(const PickableObject* elem) {
+    std::vector<GLubyte> visibility(mesh_.vertices().n(), 0);
+    if (elem != nullptr) {
+      for (const auto& n : elem->nodes) visibility[n] = 1;
+    } else {
+      std::fill(visibility.begin(), visibility.end(), 0);
+    }
+    GL_CALL(glGenBuffers(1, &point_visibility_buffer_));
+    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, point_visibility_buffer_));
+    GL_CALL(glBufferData(GL_ARRAY_BUFFER, sizeof(GLubyte) * visibility.size(),
+                         visibility.data(), GL_STATIC_DRAW));
+    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
+  }
+
   void write(const FieldLibrary* fields = nullptr) {
     context_->make_context_current();
 
@@ -396,6 +416,20 @@ class MeshScene : public wings::Scene {
     GL_CALL(glGenTextures(1, &field_texture_));
     GL_CALL(glGenTextures(1, &texcoord_texture_));
     GL_CALL(glGenTextures(1, &image_texture_));
+    GL_CALL(glGenTextures(1, &font_texture_));
+    GL_CALL(glGenTextures(1, &point_visibility_texture_));
+
+    // write font texture
+    TextureOptions tex_opts;
+    std::string f = std::string(WINGS_SOURCE_DIR) + "/data/monaco-numbers.png";
+    tex_opts.format = TextureFormat::kRGBA;
+    tex_opts.flipy = false;
+    Texture font(f, tex_opts);
+    GL_CALL(glBindTexture(GL_TEXTURE_2D, font_texture_));
+    GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, font.width(), font.height(),
+                         0, GL_RGBA, GL_UNSIGNED_BYTE, font.data()));
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
     // write the point data
     std::vector<GLfloat> coordinates(3 * mesh_.vertices().n());
@@ -411,6 +445,9 @@ class MeshScene : public wings::Scene {
     GL_CALL(glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * coordinates.size(),
                          coordinates.data(), GL_STATIC_DRAW));
     GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    // write point visibility data
+    write_point_visibility(nullptr);
 
     coordinates.clear();
     n_nodes_ = 0;
@@ -597,6 +634,7 @@ class MeshScene : public wings::Scene {
       case wings::InputType::DoubleClick: {
         view.picked = pick(input.x, input.y, view);
         if (view.picked) {
+          write_point_visibility(view.picked);
           std::string info = fmt::format("*picked element {} ({}): (",
                                          view.picked->index, view.picked->name);
           size_t i = 0;
@@ -641,18 +679,27 @@ class MeshScene : public wings::Scene {
           view.transparency = 0.01 * input.ivalue;
         else if (input.key == 'w')
           view.show_wireframe = input.ivalue > 0;
+        else if (input.key == '#')
+          view.numbers = input.ivalue > 0;
         else if (input.key == 'W') {
           int w = input.ivalue;
-          int h = 0.75 * w;
-          view.canvas.resize(w, h);
-          view.projection_matrix =
-              glm::perspective(45.0, float(w) / float(h), 0.1f, 10000.0f);
-          // save the width and height for the scene to write the image
+          view.canvas.resize(w, view.canvas.height);
+          view.projection_matrix = wings::glm::perspective(
+              view.fov, float(w) / float(view.canvas.height), view.near,
+              view.far);
+          // save the width for the scene to write the image
+          view.canvas.width = w;
           width_ = w;
+        } else if (input.key == 'H') {
+          int h = input.ivalue;
+          view.canvas.resize(view.canvas.width, h);
+          view.projection_matrix = wings::glm::perspective(
+              view.fov, float(view.canvas.width) / float(h), view.near,
+              view.far);
+          // save the height for the scene to write the image
+          view.canvas.height = h;
           height_ = h;
-          // the wings rendering context is currently in the render section.
-          // there should be another image request after the size is updated
-          updated = false;
+          // updated = false;
         } else {
           updated = false;
         }
@@ -859,6 +906,29 @@ class MeshScene : public wings::Scene {
       view.plane.draw(view.model_matrix, view.view_matrix,
                       view.projection_matrix);
 
+    // draw the text
+    if (view.numbers) {
+      const auto& shader = shaders_["text"];
+      shader.use();
+      glActiveTexture(GL_TEXTURE0 + POINT_TEXTURE);
+      GL_CALL(glBindTexture(GL_TEXTURE_BUFFER, point_texture_));
+      shader.set_uniform("points", int(POINT_TEXTURE));
+
+      glActiveTexture(GL_TEXTURE0 + FONT_TEXTURE);
+      GL_CALL(glBindTexture(GL_TEXTURE_2D, font_texture_));
+      shader.set_uniform("font", int(FONT_TEXTURE));
+
+      glActiveTexture(GL_TEXTURE0 + POINT_VISIBILITY);
+      GL_CALL(glBindTexture(GL_TEXTURE_BUFFER, point_visibility_texture_));
+      GL_CALL(glTexBuffer(GL_TEXTURE_BUFFER, GL_R8, point_visibility_buffer_));
+      shader.set_uniform("visibility", int(POINT_VISIBILITY));
+
+      shader.set_uniform("u_ModelViewProjectionMatrix", mvp_matrix);
+      GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, point_buffer_));
+      GL_CALL(glDrawArrays(GL_POINTS, 0, mesh_.vertices().n()));
+      GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
+    }
+
     // save the pixels in the wings::Scene
     view.canvas.bind();
     channels_ = 3;
@@ -908,8 +978,8 @@ class MeshScene : public wings::Scene {
     vec3f up{0, 1, 0};
     view.view_matrix = glm::lookat(view.eye, view.center, up);
     view.projection_matrix = glm::perspective(
-        view.fov, float(view.canvas.width) / float(view.canvas.height), 0.1f,
-        10000.0f);
+        view.fov, float(view.canvas.width) / float(view.canvas.height),
+        view.near, view.far);
     view.translation_matrix.eye();
 
     // vertex arrays are not shared between OpenGL contexts in different threads
@@ -949,6 +1019,10 @@ class MeshScene : public wings::Scene {
   GLuint texcoord_texture_;
   GLuint colormap_texture_;
   GLuint colormap_buffer_;
+  GLuint font_texture_;
+
+  GLuint point_visibility_buffer_;
+  GLuint point_visibility_texture_;
 
   std::vector<GLPrimitive> primitives_;
   std::vector<int> draw_order_;

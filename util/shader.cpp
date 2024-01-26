@@ -200,6 +200,7 @@ void ShaderLibrary::create() {
   add("tetrahedra-q1-p1", "tet", true, false, {version, "#define ORDER 1"});
   add("polyhedra-q1-p0", "polygons", true, false,
       {version, "#define POLYHEDRA"});
+  add("text", "text", true, false, {version});
 }
 
 void ShaderLibrary::add(const std::string& name, const std::string& prefix,
