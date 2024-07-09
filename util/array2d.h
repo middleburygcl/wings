@@ -38,7 +38,8 @@ enum LayoutCategory {
  *        or jagged arrays, in which the size along the second dimension
  *        is different for each element.
  */
-template <typename T, typename F = uint64_t> class array2d {
+template <typename T, typename F = uint64_t>
+class array2d {
  public:
   /**
    * \brief Constructs a 2d array, setting the layout and stride
@@ -175,7 +176,8 @@ template <typename T, typename F = uint64_t> class array2d {
    *
    * \param[in] x - values to add (there must be stride elements)
    */
-  template <typename R> void add(const R* x) {
+  template <typename R>
+  void add(const R* x) {
     ASSERT(layout_ == Layout_Rectangular);
     for (int j = 0; j < stride_; j++) data_.push_back(x[j]);
   }
@@ -186,7 +188,8 @@ template <typename T, typename F = uint64_t> class array2d {
    * \param[in] x - values to add (there must be stride elements)
    * \param[in] n - number of values to add
    */
-  template <typename R> void add(const R* x, int m) {
+  template <typename R>
+  void add(const R* x, int m) {
     if (layout_ == Layout_Rectangular) {
       add(x);
       return;
@@ -241,6 +244,16 @@ template <typename T, typename F = uint64_t> class array2d {
     data_.clear();
     first_.clear();
     length_.clear();
+  }
+
+  /**
+   * @brief Frees the memory used by the arrays.
+   *
+   */
+  void free() {
+    std::vector<T>().swap(data_);
+    std::vector<F>().swap(first_);
+    std::vector<uint16_t>().swap(length_);
   }
 
   /**
